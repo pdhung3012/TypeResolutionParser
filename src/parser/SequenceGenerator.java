@@ -5,20 +5,77 @@ import java.util.Iterator;
 
 import org.eclipse.jdt.core.dom.*;
 
-public class Sequencer extends ASTVisitor {
+public class SequenceGenerator extends ASTVisitor {
 	private int numOfExpressions = 0, numOfResolvedExpressions = 0;
 	private StringBuilder fullTokens = new StringBuilder(), partialTokens = new StringBuilder();
+	private String fullSequence = null, partialSequence = null;
+	private String[] fullSequenceTokens, partialSequenceTokens;
 	
-	public Sequencer() {
+	public SequenceGenerator() {
 		super(false);
 	}
 
-	public StringBuilder getFullTokens() {
-		return fullTokens;
+	public String[] getFullSequenceTokens() {
+		if (fullSequenceTokens == null)
+			buildFullSequence();
+		return fullSequenceTokens;
 	}
 
-	public StringBuilder getPartialTokens() {
-		return partialTokens;
+	public String[] getPartialSequenceTokens() {
+		if (partialSequenceTokens == null)
+			buildPartialSequence();
+		return partialSequenceTokens;
+	}
+	
+	public String getFullSequence() {
+		if (fullSequence == null)
+			buildFullSequence();
+		return fullSequence;
+	}
+
+	public String getPartialSequence() {
+		if (partialSequence == null)
+			buildPartialSequence();
+		return partialSequence;
+	}
+
+	private void buildFullSequence() {
+		ArrayList<String> parts = buildSequence(fullTokens);
+		this.fullSequence = parts.get(0);
+		this.fullSequenceTokens = new String[parts.size() - 1];
+		for (int i = 1; i < parts.size(); i++)
+			this.fullSequenceTokens[i-1] = parts.get(i);
+	}
+	
+	private void buildPartialSequence() {
+		ArrayList<String> parts = buildSequence(partialTokens);
+		this.partialSequence = parts.get(0);
+		this.partialSequenceTokens = new String[parts.size() - 1];
+		for (int i = 1; i < parts.size(); i++)
+			this.partialSequenceTokens[i-1] = parts.get(i);
+	}
+
+	private ArrayList<String> buildSequence(StringBuilder tokens) {
+		tokens.append(" ");
+		ArrayList<String> l = new ArrayList<>();
+		StringBuilder sequence = new StringBuilder(), token = null;
+		for (int i = 0; i < tokens.length(); i++) {
+			char ch = tokens.charAt(i);
+			if (ch == ' ') {
+				if (token != null) {
+					String t = token.toString();
+					l.add(t);
+					sequence.append(t + " ");
+					token = null;
+				}
+			} else {
+				if (token == null)
+					token = new StringBuilder();
+				token.append(ch);
+			}
+		}
+		l.add(0, sequence.toString());
+		return l;
 	}
 
 	public int getNumOfExpressions() {
@@ -38,7 +95,7 @@ public class Sequencer extends ASTVisitor {
 		return null;
 	}
 
-	private static String getUnresolvedType(Type type) {
+	static String getUnresolvedType(Type type) {
 		if (type.isArrayType()) {
 			ArrayType t = (ArrayType) type;
 			return getUnresolvedType(t.getElementType()) + getDimensions(t.getDimensions());
@@ -94,7 +151,7 @@ public class Sequencer extends ASTVisitor {
 		return s;
 	}
 
-	private static String getResolvedType(Type type) {
+	static String getResolvedType(Type type) {
 		if (type.isArrayType()) {
 			ArrayType t = (ArrayType) type;
 			return getResolvedType(t.getElementType()) + getDimensions(t.getDimensions());
@@ -223,8 +280,8 @@ public class Sequencer extends ASTVisitor {
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
 		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
-		this.fullTokens.append(" " + rtype + " new ");
-		this.partialTokens.append(" " + utype + " new ");
+		this.fullTokens.append(" new " + rtype + " ");
+		this.partialTokens.append(" new " + utype + " ");
 		for (Iterator it = node.arguments().iterator(); it.hasNext(); ) {
 			Expression e = (Expression) it.next();
 			e.accept(this);
@@ -318,8 +375,13 @@ public class Sequencer extends ASTVisitor {
 		String name = "." + node.getName().getIdentifier();
 		this.partialTokens.append(" " + name + " ");
 		IVariableBinding b = node.resolveFieldBinding();
-		if (b != null)
-			name = b.getDeclaringClass().getTypeDeclaration().getQualifiedName() + name;
+		if (b != null) {
+			ITypeBinding tb = b.getDeclaringClass();
+			if (tb != null)
+				name = tb.getTypeDeclaration().getQualifiedName() + name;
+			else
+				name = "Array" + name;
+		}
 		this.fullTokens.append(" " + name + " ");
 		return false;
 	}
@@ -463,7 +525,11 @@ public class Sequencer extends ASTVisitor {
 		if (b != null) {
 			if (b instanceof IVariableBinding) {
 				IVariableBinding vb = (IVariableBinding) b;
-				name = vb.getDeclaringClass().getTypeDeclaration().getQualifiedName() + name;
+				ITypeBinding tb = vb.getDeclaringClass();
+				if (tb != null)
+					name = tb.getTypeDeclaration().getQualifiedName() + name;
+				else
+					name = "Array" + name;
 			}
 		}
 		this.fullTokens.append(" " + name + " ");
@@ -483,7 +549,14 @@ public class Sequencer extends ASTVisitor {
 				IVariableBinding vb = (IVariableBinding) b;
 				this.fullTokens.append(" " + vb.getType().getTypeDeclaration().getQualifiedName() + " ");
 				this.partialTokens.append(" " + vb.getType().getTypeDeclaration().getName() + " ");
+			} else if (b instanceof ITypeBinding) {
+				ITypeBinding tb = (ITypeBinding) b;
+				this.fullTokens.append(" " + tb.getTypeDeclaration().getQualifiedName() + " ");
+				this.partialTokens.append(" " + tb.getTypeDeclaration().getName() + " ");
 			}
+		} else {
+			this.fullTokens.append(" " + node.getIdentifier() + " ");
+			this.partialTokens.append(" " + node.getIdentifier() + " ");
 		}
 		return false;
 	}
@@ -498,15 +571,18 @@ public class Sequencer extends ASTVisitor {
 		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
 		this.partialTokens.append(" " + utype + " ");
 		this.fullTokens.append(" " + rtype + " ");
-		if (node.getInitializer() != null)
+		if (node.getInitializer() != null) {
+			this.partialTokens.append("= ");
+			this.fullTokens.append("= ");
 			node.getInitializer().accept(this);
+		}
 		return false;
 	}
 
 	@Override
 	public boolean visit(StringLiteral node) {
-		this.fullTokens.append(" String ");
-		this.partialTokens.append(" String ");
+		this.fullTokens.append(" java.lang.String ");
+		this.partialTokens.append(" java.lang.String ");
 		return false;
 	}
 
@@ -669,8 +745,11 @@ public class Sequencer extends ASTVisitor {
 		String utype = getUnresolvedType(type), rtype = getResolvedType(type);
 		this.partialTokens.append(" " + utype + " ");
 		this.fullTokens.append(" " + rtype + " ");
-		if (node.getInitializer() != null)
+		if (node.getInitializer() != null) {
+			this.partialTokens.append("= ");
+			this.fullTokens.append("= ");
 			node.getInitializer().accept(this);
+		}
 		return false;
 	}
 
