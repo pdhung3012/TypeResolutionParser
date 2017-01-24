@@ -14,15 +14,12 @@ public class TestSequenceGenerator {
     public TestName name = new TestName();
 
 	public static void main(String[] args) throws Exception {
-		String[] l = "-1   0   1  ".split("[ ]+");
-		for (int i = 0; i < l.length; i++)
-			System.out.println(i + ": " + l[i]);
 		new TestSequenceGenerator().testLengthAndContainment();
 	}
 	
 	@Test
 	public void testLengthAndContainment() throws Exception {
-		ProjectSequencesGenerator psg = new ProjectSequencesGenerator(".");
+		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("T:/repos/lucene-solr");
 		psg.generateSequences();
 		for (int i = 0; i < psg.getLocations().size(); i++) {
 			System.out.println(psg.getLocations().get(i));
