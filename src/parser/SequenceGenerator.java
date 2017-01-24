@@ -178,13 +178,13 @@ public class SequenceGenerator extends ASTVisitor {
 				s += " | " + getResolvedType(types.get(i));
 			return s;
 		} else if (type.isNameQualifiedType()) {
-			return type.resolveBinding().getTypeDeclaration().getQualifiedName();
+			return tb.getTypeDeclaration().getQualifiedName();
 		} else if (type.isPrimitiveType()) {
 			return type.toString();
 		} else if (type.isQualifiedType()) {
-			return type.resolveBinding().getTypeDeclaration().getQualifiedName();
+			return tb.getTypeDeclaration().getQualifiedName();
 		} else if (type.isSimpleType()) {
-			return type.resolveBinding().getTypeDeclaration().getQualifiedName();
+			return tb.getTypeDeclaration().getQualifiedName();
 		} else if (type.isWildcardType()) {
 			WildcardType wt = (WildcardType) type;
 			String s = "?";
@@ -297,6 +297,9 @@ public class SequenceGenerator extends ASTVisitor {
 
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
+		ITypeBinding tb = node.getType().resolveBinding();
+		if (tb != null && tb.getTypeDeclaration().isLocal())
+			return false;
 		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
 		this.fullTokens.append(" new " + rtype + " ");
 		this.partialTokens.append(" new " + utype + " ");
@@ -609,6 +612,9 @@ public class SequenceGenerator extends ASTVisitor {
 
 	@Override
 	public boolean visit(SingleVariableDeclaration node) {
+		ITypeBinding tb = node.getType().resolveBinding();
+		if (tb != null && tb.getTypeDeclaration().isLocal())
+			return false;
 		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
 		this.partialTokens.append(" " + utype + " ");
 		this.fullTokens.append(" " + rtype + " ");
@@ -771,6 +777,9 @@ public class SequenceGenerator extends ASTVisitor {
 	
 	@Override
 	public boolean visit(VariableDeclarationExpression node) {
+		ITypeBinding tb = node.getType().resolveBinding();
+		if (tb != null && tb.getTypeDeclaration().isLocal())
+			return false;
 		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
 		this.partialTokens.append(" " + utype + " ");
 		this.fullTokens.append(" " + rtype + " ");
@@ -781,6 +790,9 @@ public class SequenceGenerator extends ASTVisitor {
 
 	@Override
 	public boolean visit(VariableDeclarationStatement node) {
+		ITypeBinding tb = node.getType().resolveBinding();
+		if (tb != null && tb.getTypeDeclaration().isLocal())
+			return false;
 		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
 		this.partialTokens.append(" " + utype + " ");
 		this.fullTokens.append(" " + rtype + " ");
