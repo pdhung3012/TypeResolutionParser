@@ -119,10 +119,12 @@ public class ProjectSequencesGenerator {
 				stTargetSequences.print(target + "\n");
 			}
 			if (testing) {
-				assert sTokens.length == tTokens.length;
+				if (sTokens.length != tTokens.length)
+					throw new AssertionError("Source and target sequences do not have the same length!");
 				for (int j = 0; j < sTokens.length; j++) {
 					String s = sTokens[j], t = tTokens[j];
-					assert t.equals(s) || t.endsWith(s);
+					if (!t.equals(s) && !t.endsWith(s))
+						throw new AssertionError("Corresponding source and target tokens do not match!");
 				}
 			}
 		}
