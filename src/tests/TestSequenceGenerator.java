@@ -14,13 +14,14 @@ public class TestSequenceGenerator {
     public TestName name = new TestName();
 
 	public static void main(String[] args) throws Exception {
-		new TestSequenceGenerator().testLengthAndContainment();
+		new TestSequenceGenerator().test();
 	}
 	
 	@Test
 	public void testLengthAndContainment() throws Exception {
-		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("T:/repos/lucene-solr");
-		psg.generateSequences();
+//		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("T:/repos/lucene-solr");
+		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("F:/github/repos-IntelliJ/JetBrains/intellij-community");
+		psg.generateSequences("T:/temp/statType/test");
 		for (int i = 0; i < psg.getLocations().size(); i++) {
 			System.out.println(psg.getLocations().get(i));
 			System.out.println(psg.getSourceSequences().get(i));
@@ -32,6 +33,12 @@ public class TestSequenceGenerator {
 				assertThat(s.equals(t) || t.endsWith(s), is(true));
 			}
 		}
+	}
+	
+	void test() {
+//		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("T:/repos/lucene-solr");
+		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("F:/github/repos-IntelliJ/JetBrains/intellij-community", true);
+		psg.generateSequences("T:/temp/statType/test");
 	}
 
 }

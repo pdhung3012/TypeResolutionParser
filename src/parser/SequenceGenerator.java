@@ -6,13 +6,16 @@ import java.util.Iterator;
 import org.eclipse.jdt.core.dom.*;
 
 public class SequenceGenerator extends ASTVisitor {
+	private String className, superClassName;
 	private int numOfExpressions = 0, numOfResolvedExpressions = 0;
 	private StringBuilder fullTokens = new StringBuilder(), partialTokens = new StringBuilder();
 	private String fullSequence = null, partialSequence = null;
 	private String[] fullSequenceTokens, partialSequenceTokens;
 	
-	public SequenceGenerator() {
+	public SequenceGenerator(String className, String superClassName) {
 		super(false);
+		this.className = className;
+		this.superClassName = superClassName;
 	}
 
 	public String[] getFullSequenceTokens() {
@@ -153,7 +156,10 @@ public class SequenceGenerator extends ASTVisitor {
 
 	static String getResolvedType(Type type) {
 		ITypeBinding tb = type.resolveBinding();
-		if (tb == null || tb.isRecovered() || tb.isLocal())
+		if (tb == null || tb.isRecovered())
+			return getUnresolvedType(type);
+		tb = tb.getTypeDeclaration();
+		if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 			return getUnresolvedType(type);
 		if (type.isArrayType()) {
 			ArrayType t = (ArrayType) type;
@@ -178,13 +184,13 @@ public class SequenceGenerator extends ASTVisitor {
 				s += " | " + getResolvedType(types.get(i));
 			return s;
 		} else if (type.isNameQualifiedType()) {
-			return tb.getTypeDeclaration().getQualifiedName();
+			return tb.getQualifiedName();
 		} else if (type.isPrimitiveType()) {
 			return type.toString();
 		} else if (type.isQualifiedType()) {
-			return tb.getTypeDeclaration().getQualifiedName();
+			return tb.getQualifiedName();
 		} else if (type.isSimpleType()) {
-			return tb.getTypeDeclaration().getQualifiedName();
+			return tb.getQualifiedName();
 		} else if (type.isWildcardType()) {
 			WildcardType wt = (WildcardType) type;
 			String s = "?";
@@ -320,9 +326,11 @@ public class SequenceGenerator extends ASTVisitor {
 	@Override
 	public boolean visit(ConstructorInvocation node) {
 		IMethodBinding b = node.resolveConstructorBinding();
-		if (b != null) {
-			ITypeBinding tb = b.getDeclaringClass().getTypeDeclaration();
-			if (tb.isLocal())
+		ITypeBinding tb = null;
+		if (b != null && b.getDeclaringClass() != null)
+			tb = b.getDeclaringClass().getTypeDeclaration();
+		if (tb != null) {
+			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
 			this.partialTokens.append(" " + tb.getName() + " ");
 			this.fullTokens.append(" " + tb.getQualifiedName() + " ");
@@ -330,10 +338,10 @@ public class SequenceGenerator extends ASTVisitor {
 			this.partialTokens.append(" this ");
 			this.fullTokens.append(" this ");
 		}
-		String name = ".<init>";
+		String name = "." + className;
 		this.partialTokens.append(" " + name + " ");
-		if (b != null)
-			name = b.getDeclaringClass().getTypeDeclaration().getQualifiedName() + name;
+		if (tb != null)
+			name = tb.getQualifiedName() + name;
 		this.fullTokens.append(" " + name + " ");
 		for (int i = 0; i < node.arguments().size(); i++)
 			((ASTNode) node.arguments().get(i)).accept(this);
@@ -396,8 +404,11 @@ public class SequenceGenerator extends ASTVisitor {
 		ITypeBinding tb = null;
 		if (b != null) {
 			tb = b.getDeclaringClass();
-			if (tb != null && tb.isLocal())
-				return false;
+			if (tb != null) {
+				tb = tb.getTypeDeclaration();
+				if (tb.isLocal() || tb.getQualifiedName().isEmpty())
+					return false;
+			}
 		}
 		this.fullTokens.append(" ");
 		this.partialTokens.append(" ");
@@ -476,31 +487,41 @@ public class SequenceGenerator extends ASTVisitor {
 
 	@Override
 	public boolean visit(MethodInvocation node) {
-		this.fullTokens.append(" ");
-		this.partialTokens.append(" ");
-		IMethodBinding b = node.resolveMethodBinding();
-		ITypeBinding tb = null;
-		if (b != null) {
-			tb = b.getDeclaringClass().getTypeDeclaration();
-			if (tb.isLocal())
-				return false;
-		}
-		if (node.getExpression() != null) {
-			node.getExpression().accept(this);
+		if (node.getExpression() != null && node.getExpression() instanceof TypeLiteral) {
+			TypeLiteral lit = (TypeLiteral) node.getExpression();
+			String utype = getUnresolvedType(lit.getType()), rtype = getResolvedType(lit.getType());
+			this.fullTokens.append(" " + rtype + ".class." + node.getName().getIdentifier() + " ");
+			this.partialTokens.append(" " + utype + ".class." + node.getName().getIdentifier() + " ");
 		} else {
+			IMethodBinding b = node.resolveMethodBinding();
+			ITypeBinding tb = null;
 			if (b != null) {
-				this.partialTokens.append(" " + tb.getName() + " ");
-				this.fullTokens.append(" " + tb.getQualifiedName() + " ");
-			} else {
-				this.partialTokens.append(" this ");
-				this.fullTokens.append(" this ");
+				tb = b.getDeclaringClass();
+				if (tb != null) {
+					tb = tb.getTypeDeclaration();
+					if (tb.isLocal() || tb.getQualifiedName().isEmpty())
+						return false;
+				}
 			}
+			this.fullTokens.append(" ");
+			this.partialTokens.append(" ");
+			if (node.getExpression() != null) {
+				node.getExpression().accept(this);
+			} else {
+				if (tb != null) {
+					this.partialTokens.append(" " + tb.getName() + " ");
+					this.fullTokens.append(" " + tb.getQualifiedName() + " ");
+				} else {
+					this.partialTokens.append(" this ");
+					this.fullTokens.append(" this ");
+				}
+			}
+			String name = "."+ node.getName().getIdentifier();
+			this.partialTokens.append(" " + name + " ");
+			if (tb != null)
+				name = tb.getQualifiedName() + name;
+			this.fullTokens.append(" " + name + " ");
 		}
-		String name = "."+ node.getName().getIdentifier();
-		this.partialTokens.append(" " + name + " ");
-		if (b != null)
-			name = tb.getQualifiedName() + name;
-		this.fullTokens.append(" " + name + " ");
 		for (int i = 0; i < node.arguments().size(); i++)
 			((ASTNode) node.arguments().get(i)).accept(this);
 		return false;
@@ -559,8 +580,11 @@ public class SequenceGenerator extends ASTVisitor {
 		if (b != null && b instanceof IVariableBinding) {
 			vb = (IVariableBinding) b;
 			tb = vb.getDeclaringClass();
-			if (tb != null && tb.getTypeDeclaration().isLocal())
-				return false;
+			if (tb != null) {
+				tb = tb.getTypeDeclaration();
+				if (tb.isLocal() || tb.getQualifiedName().isEmpty())
+					return false;
+			}
 		}
 		String name = "." + node.getName().getIdentifier();
 		this.partialTokens.append(" " + name + " ");
@@ -587,16 +611,18 @@ public class SequenceGenerator extends ASTVisitor {
 		if (b != null) {
 			if (b instanceof IVariableBinding) {
 				IVariableBinding vb = (IVariableBinding) b;
-				if (vb.getType().getTypeDeclaration().isLocal())
+				ITypeBinding tb = vb.getType().getTypeDeclaration();
+				if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 					return false;
-				this.fullTokens.append(" " + vb.getType().getTypeDeclaration().getQualifiedName() + " ");
-				this.partialTokens.append(" " + vb.getType().getTypeDeclaration().getName() + " ");
+				this.fullTokens.append(" " + tb.getQualifiedName() + " ");
+				this.partialTokens.append(" " + tb.getName() + " ");
 			} else if (b instanceof ITypeBinding) {
 				ITypeBinding tb = (ITypeBinding) b;
-				if (tb.getTypeDeclaration().isLocal())
+				tb = tb.getTypeDeclaration();
+				if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 					return false;
-				this.fullTokens.append(" " + tb.getTypeDeclaration().getQualifiedName() + " ");
-				this.partialTokens.append(" " + tb.getTypeDeclaration().getName() + " ");
+				this.fullTokens.append(" " + tb.getQualifiedName() + " ");
+				this.partialTokens.append(" " + tb.getName() + " ");
 			}
 		} else {
 			this.fullTokens.append(" " + node.getIdentifier() + " ");
@@ -637,9 +663,10 @@ public class SequenceGenerator extends ASTVisitor {
 	public boolean visit(SuperConstructorInvocation node) {
 		IMethodBinding b = node.resolveConstructorBinding();
 		ITypeBinding tb = null;
-		if (b != null) {
+		if (b != null && b.getDeclaringClass() != null)
 			tb = b.getDeclaringClass().getTypeDeclaration();
-			if (tb.isLocal())
+		if (tb != null) {
+			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
 			this.partialTokens.append(" " + tb.getName() + " ");
 			this.fullTokens.append(" " + tb.getQualifiedName() + " ");
@@ -647,7 +674,7 @@ public class SequenceGenerator extends ASTVisitor {
 			this.partialTokens.append(" super ");
 			this.fullTokens.append(" super ");
 		}
-		String name = ".<init>";
+		String name = "." + superClassName;
 		this.partialTokens.append(" " + name + " ");
 		if (tb != null)
 			name = tb.getQualifiedName() + name;
@@ -661,9 +688,9 @@ public class SequenceGenerator extends ASTVisitor {
 	public boolean visit(SuperFieldAccess node) {
 		IVariableBinding b = node.resolveFieldBinding();
 		ITypeBinding tb = null;
-		if (b != null) {
+		if (b != null && b.getDeclaringClass() != null) {
 			tb = b.getDeclaringClass().getTypeDeclaration();
-			if (tb.isLocal())
+			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
 			this.partialTokens.append(" " + tb.getName() + " ");
 			this.fullTokens.append(" " + tb.getQualifiedName() + " ");
@@ -683,9 +710,10 @@ public class SequenceGenerator extends ASTVisitor {
 	public boolean visit(SuperMethodInvocation node) {
 		IMethodBinding b = node.resolveMethodBinding();
 		ITypeBinding tb = null;
-		if (b != null) {
+		if (b != null && b.getDeclaringClass() != null)
 			tb = b.getDeclaringClass().getTypeDeclaration();
-			if (tb.isLocal())
+		if (tb != null) {
+			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
 			this.partialTokens.append(" " + tb.getName() + " ");
 			this.fullTokens.append(" " + tb.getQualifiedName() + " ");
@@ -728,6 +756,8 @@ public class SequenceGenerator extends ASTVisitor {
 		ITypeBinding b = node.resolveTypeBinding();
 		if (b != null) {
 			b = b.getTypeDeclaration();
+			if (b.isLocal() || b.getQualifiedName().isEmpty())
+				return false;
 			this.partialTokens.append(" " + b.getName() + " ");
 			this.fullTokens.append(" " + b.getQualifiedName() + " ");
 		} else {

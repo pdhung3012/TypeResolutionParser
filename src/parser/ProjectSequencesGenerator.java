@@ -1,6 +1,9 @@
 package parser;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,23 +18,23 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-import utils.FileUtil;
-
 public class ProjectSequencesGenerator {
-	private String path;
+	private String inPath;
+	private boolean testing = false;
 	private ArrayList<String> locations = new ArrayList<>();
 	private ArrayList<String> sourceSequences = new ArrayList<>(), targetSequences = new ArrayList<>();
 	private ArrayList<String[]> sourceSequenceTokens = new ArrayList<>(), targetSequenceTokens = new ArrayList<>();
-	private StringBuilder sbLocations, sbSourceSequences, sbTargetSequences;
+	private PrintStream stLocations, stSourceSequences, stTargetSequences, stLog;
 	
-	public ProjectSequencesGenerator(String path) {
-		this.path = path;
+	public ProjectSequencesGenerator(String inPath) {
+		this.inPath = inPath;
 	}
 	
-	public String getPath() {
-		return path;
+	public ProjectSequencesGenerator(String inPath, boolean testing) {
+		this(inPath);
+		this.testing = testing;
 	}
-
+	
 	public ArrayList<String> getLocations() {
 		return locations;
 	}
@@ -52,15 +55,30 @@ public class ProjectSequencesGenerator {
 		return targetSequenceTokens;
 	}
 
-	public void generateSequences() {
+	public void generateSequences(String outPath) {
 		String[] sourcePaths = getSourcePaths(new String[]{".java"});
 		String[] jarPaths = getJarPaths();
+		
+		try {
+			stLocations = new PrintStream(new FileOutputStream(outPath + "/locations.txt"));
+			stSourceSequences = new PrintStream(new FileOutputStream(outPath + "/source.txt"));
+			stTargetSequences = new PrintStream(new FileOutputStream(outPath + "/target.txt"));
+			stLog = new PrintStream(new FileOutputStream("T:/temp/statType/test/log.txt"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 
-		final HashMap<String, CompilationUnit> cus = new HashMap<>();
 		FileASTRequestor r = new FileASTRequestor() {
 			@Override
 			public void acceptAST(String sourceFilePath, CompilationUnit ast) {
-				cus.put(sourceFilePath, ast);
+				System.out.println(sourceFilePath);
+				stLog.println(sourceFilePath);
+				for (int i = 0; i < ast.types().size(); i++) {
+					if (ast.types().get(i) instanceof TypeDeclaration) {
+						TypeDeclaration td = (TypeDeclaration) ast.types().get(i);
+						generateSequence(td, sourceFilePath, "");
+					}
+				}
 			}
 		};
 		
@@ -76,41 +94,36 @@ public class ProjectSequencesGenerator {
 		parser.setBindingsRecovery(false);
 		
 		parser.createASTs(sourcePaths, null, new String[0], r, null);
-		
-		sbLocations = new StringBuilder();
-		sbSourceSequences = new StringBuilder();
-		sbTargetSequences = new StringBuilder();
-		for(String path : cus.keySet()){
-			CompilationUnit ast = cus.get(path);
-			for (int i = 0; i < ast.types().size(); i++) {
-				if (ast.types().get(i) instanceof TypeDeclaration) {
-					TypeDeclaration td = (TypeDeclaration) ast.types().get(i);
-					generateSequence(td, path, "");
-				}
-			}
-		}
-		FileUtil.writeToFile("T:/temp/statType/test/locations.txt", sbLocations.toString());
-		FileUtil.writeToFile("T:/temp/statType/test/source.txt", sbSourceSequences.toString());
-		FileUtil.writeToFile("T:/temp/statType/test/target.txt", sbTargetSequences.toString());
 	}
 
 	private void generateSequence(TypeDeclaration td, String path, String outer) {
 		String name = outer.isEmpty() ? td.getName().getIdentifier() : outer + "." + td.getName().getIdentifier();
+		String className = td.getName().getIdentifier(), superClassName = null;
+		if (td.getSuperclassType() != null)
+			superClassName = SequenceGenerator.getUnresolvedType(td.getSuperclassType());
 		for (MethodDeclaration method : td.getMethods()) {
-			SequenceGenerator sg = new SequenceGenerator();
+			stLog.println(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method));
+			SequenceGenerator sg = new SequenceGenerator(className, superClassName);
 			method.accept(sg);
 			int numofExpressions = sg.getNumOfExpressions(), numOfResolvedExpressions = sg.getNumOfResolvedExpressions();
 			String source = sg.getPartialSequence(), target = sg.getFullSequence();
 			String[] sTokens = sg.getPartialSequenceTokens(), tTokens = sg.getFullSequenceTokens();
 			if (sTokens.length > 0 && tTokens.length > 0 && numofExpressions > 0/* && numofExpressions == numOfResolvedExpressions*/) {
-				this.locations.add(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%");
-				this.sourceSequences.add(source);
-				this.targetSequences.add(target);
-				this.sourceSequenceTokens.add(sTokens);
-				this.targetSequenceTokens.add(tTokens);
-				sbLocations.append(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%" + "\n");
-				sbSourceSequences.append(source + "\n");
-				sbTargetSequences.append(target + "\n");
+//				this.locations.add(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%");
+//				this.sourceSequences.add(source);
+//				this.targetSequences.add(target);
+//				this.sourceSequenceTokens.add(sTokens);
+//				this.targetSequenceTokens.add(tTokens);
+				stLocations.print(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%" + "\n");
+				stSourceSequences.print(source + "\n");
+				stTargetSequences.print(target + "\n");
+			}
+			if (testing) {
+				assert sTokens.length == tTokens.length;
+				for (int j = 0; j < sTokens.length; j++) {
+					String s = sTokens[j], t = tTokens[j];
+					assert t.equals(s) || t.endsWith(s);
+				}
 			}
 		}
 		for (TypeDeclaration inner : td.getTypes())
@@ -134,7 +147,7 @@ public class ProjectSequencesGenerator {
 		for (String e : extensions)
 			exts.add(e);
 		HashSet<String> paths = new HashSet<>();
-		getSourcePaths(new File(path), paths, exts);
+		getSourcePaths(new File(inPath), paths, exts);
 		return (String[]) paths.toArray(new String[0]);
 	}
 
@@ -155,7 +168,7 @@ public class ProjectSequencesGenerator {
 
 	private String[] getJarPaths() {
 		HashMap<String, File> jarFiles = new HashMap<>();
-		getJarFiles(new File(path), jarFiles);
+		getJarFiles(new File(inPath), jarFiles);
 		String[] paths = new String[jarFiles.size()];
 		int i = 0;
 		for (File file : jarFiles.values())
