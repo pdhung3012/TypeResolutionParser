@@ -73,7 +73,7 @@ public class ProjectSequencesGenerator {
 		parser.setCompilerOptions(options);
 		parser.setEnvironment(jarPaths, new String[]{}, new String[]{}, true);
 		parser.setResolveBindings(true);
-		parser.setBindingsRecovery(true);
+		parser.setBindingsRecovery(false);
 		
 		parser.createASTs(sourcePaths, null, new String[0], r, null);
 		
@@ -102,7 +102,7 @@ public class ProjectSequencesGenerator {
 			int numofExpressions = sg.getNumOfExpressions(), numOfResolvedExpressions = sg.getNumOfResolvedExpressions();
 			String source = sg.getPartialSequence(), target = sg.getFullSequence();
 			String[] sTokens = sg.getPartialSequenceTokens(), tTokens = sg.getFullSequenceTokens();
-			/*if (numofExpressions == numOfResolvedExpressions)*/ {
+			if (sTokens.length > 0 && tTokens.length > 0 && numofExpressions > 0/* && numofExpressions == numOfResolvedExpressions*/) {
 				this.locations.add(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%");
 				this.sourceSequences.add(source);
 				this.targetSequences.add(target);
