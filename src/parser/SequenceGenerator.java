@@ -418,8 +418,8 @@ public class SequenceGenerator extends ASTVisitor {
 		if (b != null) {
 			if (tb != null)
 				name = tb.getTypeDeclaration().getQualifiedName() + name;
-			else
-				name = "Array" + name;
+			/*else
+				name = "Array" + name;*/
 		}
 		this.fullTokens.append(" " + name + " ");
 		return false;
@@ -592,8 +592,8 @@ public class SequenceGenerator extends ASTVisitor {
 			if (b instanceof IVariableBinding) {
 				if (tb != null)
 					name = tb.getTypeDeclaration().getQualifiedName() + name;
-				else
-					name = "Array" + name;
+				/*else
+					name = "Array" + name;*/
 			}
 		}
 		this.fullTokens.append(" " + name + " ");
