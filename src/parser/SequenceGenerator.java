@@ -283,8 +283,8 @@ public class SequenceGenerator extends ASTVisitor {
 	@Override
 	public boolean visit(CastExpression node) {
 		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
-		this.fullTokens.append(" " + rtype + " cast ");
-		this.partialTokens.append(" " + utype + " cast ");
+		this.fullTokens.append(" " + rtype + " <cast> ");
+		this.partialTokens.append(" " + utype + " <cast> ");
 		node.getExpression().accept(this);
 		return false;
 	}
@@ -307,8 +307,8 @@ public class SequenceGenerator extends ASTVisitor {
 		if (tb != null && tb.getTypeDeclaration().isLocal())
 			return false;
 		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
-		this.fullTokens.append(" new " + rtype + " ");
-		this.partialTokens.append(" new " + utype + " ");
+		this.fullTokens.append(" new " + rtype + "() ");
+		this.partialTokens.append(" new " + utype + "() ");
 		for (Iterator it = node.arguments().iterator(); it.hasNext(); ) {
 			Expression e = (Expression) it.next();
 			e.accept(this);
@@ -332,13 +332,8 @@ public class SequenceGenerator extends ASTVisitor {
 		if (tb != null) {
 			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
-			this.partialTokens.append(" " + tb.getName() + " ");
-			this.fullTokens.append(" " + tb.getQualifiedName() + " ");
-		} else {
-			this.partialTokens.append(" this ");
-			this.fullTokens.append(" this ");
 		}
-		String name = "." + className;
+		String name = "." + className + "()";
 		this.partialTokens.append(" " + name + " ");
 		if (tb != null)
 			name = tb.getQualifiedName() + name;
@@ -460,8 +455,8 @@ public class SequenceGenerator extends ASTVisitor {
 		this.fullTokens.append(" ");
 		this.partialTokens.append(" ");
 		node.getLeftOperand().accept(this);
-		this.fullTokens.append(" instanceof ");
-		this.partialTokens.append(" instanceof ");
+		this.fullTokens.append(" <instanceof> ");
+		this.partialTokens.append(" <instanceof> ");
 		String rtype = getResolvedType(node.getRightOperand()), utype = getUnresolvedType(node.getRightOperand());
 		this.fullTokens.append(rtype + " ");
 		this.partialTokens.append(utype + " ");
@@ -490,8 +485,8 @@ public class SequenceGenerator extends ASTVisitor {
 		if (node.getExpression() != null && node.getExpression() instanceof TypeLiteral) {
 			TypeLiteral lit = (TypeLiteral) node.getExpression();
 			String utype = getUnresolvedType(lit.getType()), rtype = getResolvedType(lit.getType());
-			this.fullTokens.append(" " + rtype + ".class." + node.getName().getIdentifier() + " ");
-			this.partialTokens.append(" " + utype + ".class." + node.getName().getIdentifier() + " ");
+			this.fullTokens.append(" " + rtype + ".class." + node.getName().getIdentifier() + "() ");
+			this.partialTokens.append(" " + utype + ".class." + node.getName().getIdentifier() + "() ");
 		} else {
 			IMethodBinding b = node.resolveMethodBinding();
 			ITypeBinding tb = null;
@@ -516,7 +511,7 @@ public class SequenceGenerator extends ASTVisitor {
 					this.fullTokens.append(" this ");
 				}
 			}
-			String name = "."+ node.getName().getIdentifier();
+			String name = "."+ node.getName().getIdentifier() + "()";
 			this.partialTokens.append(" " + name + " ");
 			if (tb != null)
 				name = tb.getQualifiedName() + name;
@@ -668,13 +663,8 @@ public class SequenceGenerator extends ASTVisitor {
 		if (tb != null) {
 			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
-			this.partialTokens.append(" " + tb.getName() + " ");
-			this.fullTokens.append(" " + tb.getQualifiedName() + " ");
-		} else {
-			this.partialTokens.append(" super ");
-			this.fullTokens.append(" super ");
 		}
-		String name = "." + superClassName;
+		String name = "." + superClassName + "()";
 		this.partialTokens.append(" " + name + " ");
 		if (tb != null)
 			name = tb.getQualifiedName() + name;
@@ -721,7 +711,7 @@ public class SequenceGenerator extends ASTVisitor {
 			this.partialTokens.append(" super ");
 			this.fullTokens.append(" super ");
 		}
-		String name = "."+ node.getName().getIdentifier();
+		String name = "."+ node.getName().getIdentifier() + "()";
 		this.partialTokens.append(" " + name + " ");
 		if (tb != null)
 			name = tb.getQualifiedName() + name;
