@@ -138,8 +138,8 @@ public class ProjectSequencesGenerator {
 					String p = file.getParentFile().getAbsolutePath();
 					if (p.endsWith(name))
 						add(p.substring(0, p.length() - name.length() - 1), rootPaths);
-				} else 
-					badFiles.add(file.getAbsolutePath());
+				} /*else 
+					badFiles.add(file.getAbsolutePath());*/
 			} catch (Throwable t) {
 				badFiles.add(file.getAbsolutePath());
 			}
