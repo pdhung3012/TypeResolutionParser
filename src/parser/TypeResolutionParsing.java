@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.hamcrest.core.Is;
+
 import utils.FileUtil;
 
 public class TypeResolutionParsing {
@@ -12,9 +14,9 @@ public class TypeResolutionParsing {
 	static String fop_output="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputCodeSequence\\";
 	static String fop_jdk="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\JDK_coreSource\\";
 	//C:\githubWellMaintainedProject
-	//static String fop_project="C:\\githubWellMaintainedProject\\";
+	static String fop_project="C:\\githubWellMaintainedProject\\";
 	
-	//static String fop_project="C:\\Users\\pdhung\\workspace_ee\\TestJavaProject\\";
+//	static String fop_project="C:\\Users\\pdhung\\workspace_ee\\TestJavaProject\\";
 	static String fn_source_full_success="source_full_success.txt";
 	static String fn_source_success="source_success.txt";	
 	static String fn_target_full_success="target_full_success.txt";
@@ -59,10 +61,65 @@ public class TypeResolutionParsing {
 					continue;
 				}
 				
-				TypeResolutionVisitor visitor=new TypeResolutionVisitor(fop_jdk,arrFileChildren[i].getAbsolutePath(),true);			
-		     	 //  	visitor.parseTypeInformationOfProject(new File(fop_project));	        
-					//System.out.println("Number file: "+walk(fop_jdk+"java\\",visitor));
-					System.out.println(arrFileChildren[i].getName()+": "+walk(arrFileChildren[i].getAbsolutePath(),visitor));
+
+				System.out.println("project "+i+": "+arrFileChildren[i]);
+				ProjectSequencesGenerator psg = new ProjectSequencesGenerator(arrFileChildren[i].getAbsolutePath()+"\\");
+				
+				psg.generateSequences();
+				
+				StringBuilder sbLocations = new StringBuilder();
+				StringBuilder sbSourceSequences = new StringBuilder();
+				StringBuilder sbTargetSequences = new StringBuilder();
+				
+				int countBuffer=0;
+				
+
+				for (int j = 0; j < psg.getLocations().size(); j++) {
+//					System.out.println(psg.getLocations().get(j));
+//					System.out.println("Source: "+psg.getSourceSequences().get(j));
+//					System.out.println("Target: "+psg.getTargetSequences().get(j));
+					String[] ss = psg.getSourceSequenceTokens().get(j), ts = psg.getTargetSequenceTokens().get(j);
+					
+				//	assertThat(ss.length, is(ts.length));
+					if(ss.length==ts.length){
+						boolean isCorrectStructure=true;
+						for (int k = 0; k < ss.length; k++) {
+							String s = ss[k], t = ts[k];
+//							System.out.println("Source "+s);
+//							System.out.println("Target "+t);
+							if(s.equals(t) || t.endsWith(s)){
+								
+						//		break;
+							} else{
+								isCorrectStructure=false;
+							}
+//							assertThat(s.equals(t) || t.endsWith(s), is(true));
+						}
+						if(isCorrectStructure){
+							sbLocations.append(psg.getLocations().get(j)+"\n");
+							sbSourceSequences.append(psg.getSourceSequences().get(j)+"\n");
+							sbTargetSequences.append(psg.getTargetSequences().get(j)+"\n");
+							countBuffer++;
+							if(countBuffer==1000){
+								String fop_project="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\";
+								FileUtil.appendToFile(fop_project+"locations.txt", sbLocations.toString()+"\n");
+								FileUtil.appendToFile(fop_project+"source.txt", sbSourceSequences.toString()+"\n");
+								FileUtil.appendToFile(fop_project+"target.txt", sbTargetSequences.toString()+"\n");
+								sbLocations = new StringBuilder();
+								sbSourceSequences = new StringBuilder();
+								sbTargetSequences = new StringBuilder();
+							}
+						}
+					}
+					
+					
+				}
+				if(countBuffer>0){
+					String fop_project="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\";
+					FileUtil.appendToFile(fop_project+"locations.txt", sbLocations.toString()+"\n");
+					FileUtil.appendToFile(fop_project+"source.txt", sbSourceSequences.toString()+"\n");
+					FileUtil.appendToFile(fop_project+"target.txt", sbTargetSequences.toString()+"\n");
+				}
 			}
 //			TypeResolutionVisitor visitor=new TypeResolutionVisitor(fop_jdk,fop_project,true);			
 //     	 //  	visitor.parseTypeInformationOfProject(new File(fop_project));	        
