@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class FileUtil {
 	public static String getFileContent(String fp){
@@ -83,4 +84,11 @@ public class FileUtil {
                         }
                     }
     }
+
+	public static void writeToFile(String path, ArrayList<String> lines) {
+		StringBuilder sb = new StringBuilder();
+		for (String l : lines)
+			sb.append(l + "\n");
+		writeToFile(path, sb.toString());
+	}
 }
