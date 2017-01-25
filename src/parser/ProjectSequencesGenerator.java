@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Scanner;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
@@ -23,8 +24,9 @@ import utils.FileUtil;
 
 public class ProjectSequencesGenerator {
 	private static final boolean PARSE_INDIVIDUAL_SRC = false, SCAN_FILES_FRIST = false;
+	private static final int MAX_TOKEN_MAPPINGS = 1;
 	
-	private String inPath;
+	private String inPath, outPath;
 	private boolean testing = false;
 //	private ArrayList<String> locations = new ArrayList<>();
 //	private ArrayList<String> sourceSequences = new ArrayList<>(), targetSequences = new ArrayList<>();
@@ -62,6 +64,7 @@ public class ProjectSequencesGenerator {
 //	}
 
 	public void generateSequences(String outPath) {
+		this.outPath = outPath;
 		ArrayList<String> rootPaths = getRootPaths();
 		String[] jarPaths = getJarPaths();
 		
@@ -255,6 +258,7 @@ public class ProjectSequencesGenerator {
 	}
 
 	private void getJarFiles(File file, HashMap<String, File> jarFiles) {
+
 		if (file.isDirectory()) {
 			for (File sub : file.listFiles())
 				getJarFiles(sub, jarFiles);
@@ -263,5 +267,62 @@ public class ProjectSequencesGenerator {
 			if (f == null || file.lastModified() > f.lastModified())
 				jarFiles.put(file.getName(), file);
 		}
+	}
+	
+	public void updateTokens() {
+		HashMap<String, HashMap<String, Integer>> tokenMapCount = new HashMap<>();
+		ArrayList<String> sourceSequences = readSource(outPath + "/source.txt"), targetSequences = readSource(outPath + "/target.txt");
+		for (int i = 0; i < sourceSequences.size(); i++) {
+			String source = sourceSequences.get(i), target = targetSequences.get(i);
+			String[] sTokens = source.trim().split(" "), tTokens = target.trim().split(" ");
+			for (int j = 0; j < sTokens.length; j++) {
+				String s = sTokens[j], t = tTokens[j];
+				HashMap<String, Integer> mapCount = tokenMapCount.get(s);
+				if (mapCount == null) {
+					mapCount = new HashMap<>();
+					tokenMapCount.put(s, mapCount);
+				}
+				if (mapCount.containsKey(t))
+					mapCount.put(t, mapCount.get(t) + 1);
+				else
+					mapCount.put(t, 1);
+			}
+		}
+		HashSet<String> commonTokens = new HashSet<>();
+		for (String s : tokenMapCount.keySet()) {
+			HashMap<String, Integer> mapCount = tokenMapCount.get(s);
+			if (mapCount.size() > MAX_TOKEN_MAPPINGS)
+				commonTokens.add(s);
+		}
+		ArrayList<String> updatedSequences = new ArrayList<>();
+		for (int i = 0; i < sourceSequences.size(); i++) {
+			StringBuilder sb = new StringBuilder();
+			String source = sourceSequences.get(i), target = targetSequences.get(i);
+			String[] sTokens = source.trim().split(" "), tTokens = target.trim().split(" ");
+			for (int j = 0; j < sTokens.length; j++) {
+				String s = sTokens[j], t = tTokens[j];
+				if (commonTokens.contains(s))
+					sb.append(s + " ");
+				else
+					sb.append(t + " ");
+			}
+			updatedSequences.add(sb.toString().trim());
+		}
+		File dir = new File(outPath + "_updated");
+		if (!dir.exists())
+			dir.mkdirs();
+		FileUtil.writeToFile(dir.getAbsolutePath() + "/source.txt", sourceSequences);
+		FileUtil.writeToFile(dir.getAbsolutePath() + "/target.txt", updatedSequences);
+	}
+
+	private ArrayList<String> readSource(String path) {
+		ArrayList<String> sequences = new ArrayList<>();
+		String sources = FileUtil.getFileContent(path);
+		Scanner sc = new Scanner(sources);
+		while (sc.hasNextLine()) {
+			sequences.add(sc.nextLine());
+		}
+		sc.close();
+		return sequences;
 	}
 }
