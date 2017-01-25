@@ -614,11 +614,14 @@ public class SequenceGenerator extends ASTVisitor {
 		if (b != null) {
 			if (b instanceof IVariableBinding) {
 				IVariableBinding vb = (IVariableBinding) b;
-				ITypeBinding tb = vb.getType().getTypeDeclaration();
-				if (tb.isLocal() || tb.getQualifiedName().isEmpty())
-					return false;
-				this.fullTokens.append(" " + tb.getQualifiedName() + " ");
-				this.partialTokens.append(" " + tb.getName() + " ");
+				ITypeBinding tb = vb.getType();
+				if (tb != null) {
+					tb = tb.getTypeDeclaration();
+					if (tb.isLocal() || tb.getQualifiedName().isEmpty())
+						return false;
+					this.fullTokens.append(" " + tb.getQualifiedName() + " ");
+					this.partialTokens.append(" " + tb.getName() + " ");
+				}
 			} else if (b instanceof ITypeBinding) {
 				ITypeBinding tb = (ITypeBinding) b;
 				tb = tb.getTypeDeclaration();
