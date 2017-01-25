@@ -125,7 +125,9 @@ public class ProjectSequencesGenerator {
 					throw new AssertionError("Source and target sequences do not have the same length!");
 				for (int j = 0; j < sTokens.length; j++) {
 					String s = sTokens[j], t = tTokens[j];
-					if (!t.equals(s) && !t.endsWith(s))
+//					if (!t.equals(s) && !t.endsWith(s))
+//					if (t.length() < s.length())
+					if (!t.contains(".") && !s.contains(".") && !t.equals(s))
 						throw new AssertionError("Corresponding source and target tokens do not match!");
 				}
 			}
