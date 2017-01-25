@@ -22,7 +22,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import utils.FileUtil;
 
 public class ProjectSequencesGenerator {
-	private static final boolean PARSE_INDIVIDUAL_SRC = false;
+	private static final boolean PARSE_INDIVIDUAL_SRC = false, SCAN_FILES_FRIST = false;
 	
 	private String inPath;
 	private boolean testing = false;
@@ -109,8 +109,11 @@ public class ProjectSequencesGenerator {
 
 	private ArrayList<String> getRootPaths() {
 		ArrayList<String> rootPaths = new ArrayList<>();
-		getRootPaths(new File(inPath), rootPaths);
-		if (!PARSE_INDIVIDUAL_SRC) {
+		if (PARSE_INDIVIDUAL_SRC)
+			getRootPaths(new File(inPath), rootPaths);
+		else {
+			if (SCAN_FILES_FRIST)
+				getRootPaths(new File(inPath), rootPaths);
 			rootPaths = new ArrayList<>();
 			rootPaths.add(inPath);
 		}
