@@ -71,6 +71,8 @@ public class ProjectSequencesGenerator {
 		FileASTRequestor r = new FileASTRequestor() {
 			@Override
 			public void acceptAST(String sourceFilePath, CompilationUnit ast) {
+				if (ast.getPackage() == null)
+					return;
 				System.out.println(sourceFilePath);
 				stLog.println(sourceFilePath);
 				for (int i = 0; i < ast.types().size(); i++) {

@@ -239,7 +239,15 @@ public class SequenceGenerator extends ASTVisitor {
 
 	@Override
 	public boolean visit(ArrayCreation node) {
-		return super.visit(node);
+		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
+		this.partialTokens.append(" new " + utype + " ");
+		this.fullTokens.append(" new " + rtype + " ");
+		if (node.getInitializer() != null)
+			node.getInitializer().accept(this);
+		else
+			for (int i = 0; i < node.dimensions().size(); i++)
+				((Expression) (node.dimensions().get(i))).accept(this);
+		return false;
 	}
 
 	@Override
@@ -838,6 +846,51 @@ public class SequenceGenerator extends ASTVisitor {
 	@Override
 	public boolean visit(WhileStatement node) {
 		return super.visit(node);
+	}
+	
+	@Override
+	public boolean visit(ArrayType node) {
+		return false;
+	}
+	
+	@Override
+	public boolean visit(IntersectionType node) {
+		return false;
+	}
+	
+	@Override
+	public boolean visit(ParameterizedType node) {
+		return false;
+	}
+	
+	@Override
+	public boolean visit(UnionType node) {
+		return false;
+	}
+	
+	@Override
+	public boolean visit(NameQualifiedType node) {
+		return false;
+	}
+	
+	@Override
+	public boolean visit(PrimitiveType node) {
+		return false;
+	}
+	
+	@Override
+	public boolean visit(QualifiedType node) {
+		return false;
+	}
+	
+	@Override
+	public boolean visit(SimpleType node) {
+		return false;
+	}
+	
+	@Override
+	public boolean visit(WildcardType node) {
+		return false;
 	}
 
 }
