@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,13 +19,18 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import utils.FileUtil;
+
 public class ProjectSequencesGenerator {
+	private static final boolean PARSE_INDIVIDUAL_SRC = false;
+	
 	private String inPath;
 	private boolean testing = false;
-	private ArrayList<String> locations = new ArrayList<>();
-	private ArrayList<String> sourceSequences = new ArrayList<>(), targetSequences = new ArrayList<>();
-	private ArrayList<String[]> sourceSequenceTokens = new ArrayList<>(), targetSequenceTokens = new ArrayList<>();
+//	private ArrayList<String> locations = new ArrayList<>();
+//	private ArrayList<String> sourceSequences = new ArrayList<>(), targetSequences = new ArrayList<>();
+//	private ArrayList<String[]> sourceSequenceTokens = new ArrayList<>(), targetSequenceTokens = new ArrayList<>();
 	private PrintStream stLocations, stSourceSequences, stTargetSequences, stLog;
+	private HashSet<String> badFiles = new HashSet<>();
 	
 	public ProjectSequencesGenerator(String inPath) {
 		this.inPath = inPath;
@@ -35,28 +41,28 @@ public class ProjectSequencesGenerator {
 		this.testing = testing;
 	}
 	
-	public ArrayList<String> getLocations() {
-		return locations;
-	}
-
-	public ArrayList<String> getSourceSequences() {
-		return sourceSequences;
-	}
-
-	public ArrayList<String> getTargetSequences() {
-		return targetSequences;
-	}
-
-	public ArrayList<String[]> getSourceSequenceTokens() {
-		return sourceSequenceTokens;
-	}
-
-	public ArrayList<String[]> getTargetSequenceTokens() {
-		return targetSequenceTokens;
-	}
+//	public ArrayList<String> getLocations() {
+//		return locations;
+//	}
+//
+//	public ArrayList<String> getSourceSequences() {
+//		return sourceSequences;
+//	}
+//
+//	public ArrayList<String> getTargetSequences() {
+//		return targetSequences;
+//	}
+//
+//	public ArrayList<String[]> getSourceSequenceTokens() {
+//		return sourceSequenceTokens;
+//	}
+//
+//	public ArrayList<String[]> getTargetSequenceTokens() {
+//		return targetSequenceTokens;
+//	}
 
 	public void generateSequences(String outPath) {
-		String[] sourcePaths = getSourcePaths(new String[]{".java"});
+		ArrayList<String> rootPaths = getRootPaths();
 		String[] jarPaths = getJarPaths();
 		
 		try {
@@ -67,35 +73,97 @@ public class ProjectSequencesGenerator {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-
-		FileASTRequestor r = new FileASTRequestor() {
-			@Override
-			public void acceptAST(String sourceFilePath, CompilationUnit ast) {
-				if (ast.getPackage() == null)
-					return;
-				System.out.println(sourceFilePath);
-				stLog.println(sourceFilePath);
-				for (int i = 0; i < ast.types().size(); i++) {
-					if (ast.types().get(i) instanceof TypeDeclaration) {
-						TypeDeclaration td = (TypeDeclaration) ast.types().get(i);
-						generateSequence(td, sourceFilePath, "");
+		
+		for (String rootPath : rootPaths) {
+			String[] sourcePaths = getSourcePaths(rootPath, new String[]{".java"});
+			FileASTRequestor r = new FileASTRequestor() {
+				@Override
+				public void acceptAST(String sourceFilePath, CompilationUnit ast) {
+					if (ast.getPackage() == null)
+						return;
+					System.out.println(sourceFilePath);
+					stLog.println(sourceFilePath);
+					for (int i = 0; i < ast.types().size(); i++) {
+						if (ast.types().get(i) instanceof TypeDeclaration) {
+							TypeDeclaration td = (TypeDeclaration) ast.types().get(i);
+							generateSequence(td, sourceFilePath, "");
+						}
 					}
 				}
+			};
+			
+			@SuppressWarnings("rawtypes")
+			Map options = JavaCore.getOptions();
+			options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
+			options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_8);
+			options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_8);
+			ASTParser parser = ASTParser.newParser(AST.JLS8);
+			parser.setCompilerOptions(options);
+			parser.setEnvironment(jarPaths, new String[]{}, new String[]{}, true);
+			parser.setResolveBindings(true);
+			parser.setBindingsRecovery(false);
+			
+			parser.createASTs(sourcePaths, null, new String[0], r, null);
+		}
+	}
+
+	private ArrayList<String> getRootPaths() {
+		ArrayList<String> rootPaths = new ArrayList<>();
+		getRootPaths(new File(inPath), rootPaths);
+		if (!PARSE_INDIVIDUAL_SRC) {
+			rootPaths = new ArrayList<>();
+			rootPaths.add(inPath);
+		}
+		return rootPaths;
+	}
+
+	private void getRootPaths(File file, ArrayList<String> rootPaths) {
+		if (file.isDirectory()) {
+			System.out.println(rootPaths);
+			for (File sub : file.listFiles())
+				getRootPaths(sub, rootPaths);
+		} else if (file.getName().endsWith(".java")) {
+			Map options = JavaCore.getOptions();
+			options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
+			options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_8);
+			options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_8);
+			ASTParser parser = ASTParser.newParser(AST.JLS8);
+			parser.setCompilerOptions(options);
+			parser.setSource(FileUtil.getFileContent(file.getAbsolutePath()).toCharArray());
+			try {
+				CompilationUnit ast = (CompilationUnit) parser.createAST(null);
+				if (ast.getPackage() != null && !ast.types().isEmpty() && ast.types().get(0) instanceof TypeDeclaration) {
+					String name = ast.getPackage().getName().getFullyQualifiedName();
+					name = name.replace('.', '\\');
+					String p = file.getParentFile().getAbsolutePath();
+					if (p.endsWith(name))
+						add(p.substring(0, p.length() - name.length() - 1), rootPaths);
+				} else 
+					badFiles.add(file.getAbsolutePath());
+			} catch (Throwable t) {
+				badFiles.add(file.getAbsolutePath());
 			}
-		};
-		
-		@SuppressWarnings("rawtypes")
-		Map options = JavaCore.getOptions();
-		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
-		options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_8);
-		options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_8);
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
-		parser.setCompilerOptions(options);
-		parser.setEnvironment(jarPaths, new String[]{}, new String[]{}, true);
-		parser.setResolveBindings(true);
-		parser.setBindingsRecovery(false);
-		
-		parser.createASTs(sourcePaths, null, new String[0], r, null);
+		}
+	}
+
+	private void add(String path, ArrayList<String> rootPaths) {
+		int index = Collections.binarySearch(rootPaths, path);
+		if (index < 0) {
+			index = - index - 1;
+			int i = rootPaths.size() - 1;
+			while (i > index) {
+				if (rootPaths.get(i).startsWith(path))
+					rootPaths.remove(i);
+				i--;
+			}
+			i = index - 1;
+			while (i >= 0) {
+				if (path.startsWith(rootPaths.get(i)))
+					return;
+				i--;
+			}
+			rootPaths.add(index, path);
+		}
 	}
 
 	private void generateSequence(TypeDeclaration td, String path, String outer) {
@@ -148,12 +216,13 @@ public class ProjectSequencesGenerator {
 		return sb.toString();
 	}
 
-	private String[] getSourcePaths(String[] extensions) {
+	private String[] getSourcePaths(String path, String[] extensions) {
 		HashSet<String> exts = new HashSet<>();
 		for (String e : extensions)
 			exts.add(e);
 		HashSet<String> paths = new HashSet<>();
-		getSourcePaths(new File(inPath), paths, exts);
+		getSourcePaths(new File(path), paths, exts);
+		paths.removeAll(badFiles);
 		return (String[]) paths.toArray(new String[0]);
 	}
 
