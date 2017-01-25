@@ -576,19 +576,32 @@ public class SequenceGenerator extends ASTVisitor {
 
 	@Override
 	public boolean visit(QualifiedName node) {
-		node.getQualifier().accept(this);
 		IBinding b = node.resolveBinding();
 		IVariableBinding vb = null;
 		ITypeBinding tb = null;
-		if (b != null && b instanceof IVariableBinding) {
-			vb = (IVariableBinding) b;
-			tb = vb.getDeclaringClass();
-			if (tb != null) {
-				tb = tb.getTypeDeclaration();
+		if (b != null) {
+			if (b instanceof IVariableBinding) {
+				vb = (IVariableBinding) b;
+				tb = vb.getDeclaringClass();
+				if (tb != null) {
+					tb = tb.getTypeDeclaration();
+					if (tb.isLocal() || tb.getQualifiedName().isEmpty())
+						return false;
+				}
+			} else if (b instanceof ITypeBinding) {
+				tb = ((ITypeBinding) b).getTypeDeclaration();
 				if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 					return false;
+				this.partialTokens.append(" " + node.getFullyQualifiedName() + " ");
+				this.fullTokens.append(" " + tb.getQualifiedName() + " ");
+				return false;
 			}
+		} else {
+			this.partialTokens.append(" " + node.getFullyQualifiedName() + " ");
+			this.fullTokens.append(" " + node.getFullyQualifiedName() + " ");
+			return false;
 		}
+		node.getQualifier().accept(this);
 		String name = "." + node.getName().getIdentifier();
 		this.partialTokens.append(" " + name + " ");
 		if (b != null) {
