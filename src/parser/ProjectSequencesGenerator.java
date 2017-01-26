@@ -25,6 +25,7 @@ import utils.FileUtil;
 public class ProjectSequencesGenerator {
 	private static final boolean PARSE_INDIVIDUAL_SRC = false, SCAN_FILES_FRIST = false;
 	private static final int MAX_TOKEN_MAPPINGS = 1;
+	private static final double MAX_ENTROPY = 1.0;
 	
 	private String inPath, outPath;
 	private boolean testing = false;
@@ -291,7 +292,10 @@ public class ProjectSequencesGenerator {
 		HashSet<String> commonTokens = new HashSet<>();
 		for (String s : tokenMapCount.keySet()) {
 			HashMap<String, Integer> mapCount = tokenMapCount.get(s);
-			if (mapCount.size() > MAX_TOKEN_MAPPINGS)
+//			if (mapCount.size() > MAX_TOKEN_MAPPINGS)
+//				commonTokens.add(s);
+			double entropy = entropy(s, mapCount);
+			if (entropy > MAX_ENTROPY)
 				commonTokens.add(s);
 		}
 		ArrayList<String> updatedSequences = new ArrayList<>();
@@ -313,6 +317,22 @@ public class ProjectSequencesGenerator {
 			dir.mkdirs();
 		FileUtil.writeToFile(dir.getAbsolutePath() + "/source.txt", sourceSequences);
 		FileUtil.writeToFile(dir.getAbsolutePath() + "/target.txt", updatedSequences);
+	}
+
+	private double entropy(String s, HashMap<String, Integer> mapCount) {
+		double[] ps = new double[mapCount.size()];
+		int sum = 0;
+		for (int v : mapCount.values())
+			sum += v;
+		int i = 0;
+		for (int v : mapCount.values()) {
+			ps[i] = v / sum;
+			i++;
+		}
+		double e = 0;
+		for (double p : ps)
+			e += p * Math.log10(p) / Math.log10(2);
+		return e / ps.length;
 	}
 
 	private ArrayList<String> readSource(String path) {
