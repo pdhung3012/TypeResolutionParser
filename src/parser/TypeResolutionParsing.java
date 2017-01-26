@@ -9,7 +9,7 @@ import utils.FileUtil;
 import utils.NotifyingBlockingThreadPoolExecutor;
 
 public class TypeResolutionParsing {
-	private static final int THREAD_POOL_SIZE = 1;
+	private static final int THREAD_POOL_SIZE = 4;
 
 	private static final Callable<Boolean> blockingTimeoutCallback = new Callable<Boolean>() {
 		@Override
@@ -69,66 +69,21 @@ public class TypeResolutionParsing {
 			}
 			System.out.println("project " + i + ": " + arrFileChildren[i]);
 			final String path = arrFileChildren[i].getAbsolutePath(), projectName = arrFileChildren[i].getName();
-			pool.execute(new Runnable() {
-				@Override
-				public void run() {
-					ProjectSequencesGenerator psg = new ProjectSequencesGenerator(path + "\\");
-					psg.generateSequences("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\" + projectName + "\\");
-					psg.generateAlignment();
-					//				StringBuilder sbLocations = new StringBuilder();
-					//				StringBuilder sbSourceSequences = new StringBuilder();
-					//				StringBuilder sbTargetSequences = new StringBuilder();
-					//				
-					//				int countBuffer=0;
-					//				
-					//
-					//				for (int j = 0; j < psg.getLocations().size(); j++) {
-					//					String[] ss = psg.getSourceSequenceTokens().get(j), ts = psg.getTargetSequenceTokens().get(j);
-					//					
-					//					if(ss.length==ts.length){
-					//						boolean isCorrectStructure=true;
-					//						for (int k = 0; k < ss.length; k++) {
-					//							String s = ss[k], t = ts[k];
-					//							if(s.equals(t) || t.endsWith(s)){
-					//								
-					//							} else{
-					//								isCorrectStructure=false;
-					//							}
-					//						}
-					//						if(isCorrectStructure){
-					//							sbLocations.append(psg.getLocations().get(j)+"\n");
-					//							sbSourceSequences.append(psg.getSourceSequences().get(j)+"\n");
-					//							sbTargetSequences.append(psg.getTargetSequences().get(j)+"\n");
-					//							countBuffer++;
-					//							if(countBuffer==1000){
-					//								String fop_project="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\";
-					//								FileUtil.appendToFile(fop_project+"locations.txt", sbLocations.toString()+"\n");
-					//								FileUtil.appendToFile(fop_project+"source.txt", sbSourceSequences.toString()+"\n");
-					//								FileUtil.appendToFile(fop_project+"target.txt", sbTargetSequences.toString()+"\n");
-					//								sbLocations = new StringBuilder();
-					//								sbSourceSequences = new StringBuilder();
-					//								sbTargetSequences = new StringBuilder();
-					//							}
-					//						}
-					//					}
-					//					
-					//					
-					//				}
-					//				if(countBuffer>0){
-					//					String fop_project="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\";
-					//					FileUtil.appendToFile(fop_project+"locations.txt", sbLocations.toString()+"\n");
-					//					FileUtil.appendToFile(fop_project+"source.txt", sbSourceSequences.toString()+"\n");
-					//					FileUtil.appendToFile(fop_project+"target.txt", sbTargetSequences.toString()+"\n");
-					//				}
-				}
-			});
+			try {
+				pool.execute(new Runnable() {
+					@Override
+					public void run() {
+						ProjectSequencesGenerator psg = new ProjectSequencesGenerator(path + "\\");
+						psg.generateSequences("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\" + projectName + "\\");
+						psg.generateAlignment();
+					}
+				});
+			} catch (Throwable ex){
+				System.err.println(ex.getMessage());
+				//ex.printStackTrace();
+			}
+			
 		}
-		//			TypeResolutionVisitor visitor=new TypeResolutionVisitor(fop_jdk,fop_project,true);			
-		//     	 //  	visitor.parseTypeInformationOfProject(new File(fop_project));	        
-		//			//System.out.println("Number file: "+walk(fop_jdk+"java\\",visitor));
-		//			System.out.println("Number file: "+walk(fop_project,visitor));			
-		//			System.out.println("Number of spec method:" +numOfSpecMethod);
-		//			System.out.println("Number of all method:" +numOfTotalMethod);
 		System.out.println("End");
 		
 		try {
