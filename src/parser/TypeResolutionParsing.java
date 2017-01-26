@@ -74,7 +74,7 @@ public class TypeResolutionParsing {
 				public void run() {
 					ProjectSequencesGenerator psg = new ProjectSequencesGenerator(path + "\\");
 					psg.generateSequences("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\" + projectName + "\\");
-		
+					psg.generateAlignment();
 					//				StringBuilder sbLocations = new StringBuilder();
 					//				StringBuilder sbSourceSequences = new StringBuilder();
 					//				StringBuilder sbTargetSequences = new StringBuilder();
