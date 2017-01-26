@@ -6,7 +6,7 @@ import java.util.Iterator;
 import org.eclipse.jdt.core.dom.*;
 
 public class SequenceGenerator extends ASTVisitor {
-	private static final boolean USE_SIMPLE_METHOD_NAME = true;
+	private static final boolean USE_SIMPLE_METHOD_NAME = false;
 	private String className, superClassName;
 	private int numOfExpressions = 0, numOfResolvedExpressions = 0;
 	private StringBuilder fullTokens = new StringBuilder(), partialTokens = new StringBuilder();
@@ -523,12 +523,12 @@ public class SequenceGenerator extends ASTVisitor {
 			String name = "."+ node.getName().getIdentifier() + "()";
 			this.partialTokens.append(" " + name + " ");
 			if (!USE_SIMPLE_METHOD_NAME && tb != null 
-					&& !name.equals(".toString()") 
-					&& !name.equals(".equals()") 
-					&& !name.equals(".clone()") 
-					&& !name.equals(".getClass()")
-					&& !name.equals(".hashCode()")
-					&& !name.equals(".valueOf()")
+//					&& !name.equals(".toString()") 
+//					&& !name.equals(".equals()") 
+//					&& !name.equals(".clone()") 
+//					&& !name.equals(".getClass()")
+//					&& !name.equals(".hashCode()")
+//					&& !name.equals(".valueOf()")
 					)
 				name = tb.getQualifiedName() + name;
 			this.fullTokens.append(" " + name + " ");

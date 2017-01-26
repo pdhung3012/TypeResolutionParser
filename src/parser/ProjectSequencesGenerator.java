@@ -270,6 +270,43 @@ public class ProjectSequencesGenerator {
 		}
 	}
 	
+	public void generateAlignment() {
+		ArrayList<String> sourceSequences = readSource(outPath + "/source.txt"), targetSequences = readSource(outPath + "/target.txt");
+		StringBuilder sbS2T = new StringBuilder(), sbT2S = new StringBuilder();
+		for (int i = 0; i < sourceSequences.size(); i++) {
+			String source = sourceSequences.get(i), target = targetSequences.get(i);
+			String[] sTokens = source.trim().split(" "), tTokens = target.trim().split(" ");
+			String headerS2T = generateHeader(sTokens, tTokens, i), headerT2S = generateHeader(tTokens, sTokens, i);
+			sbS2T.append(headerS2T + "\n");
+			sbT2S.append(headerT2S + "\n");
+			sbS2T.append(target + "\n");
+			sbT2S.append(source + "\n");
+			String alignmentS2T = generateAlignment(sTokens), alignmentT2S = generateAlignment(tTokens);
+			sbS2T.append(alignmentS2T + "\n");
+			sbT2S.append(alignmentT2S + "\n");
+		}
+		File dir = new File(outPath + "-alignment");
+		if (!dir.exists())
+			dir.mkdirs();
+		FileUtil.writeToFile(dir.getAbsolutePath() + "/training.s-t.A3", sbS2T.toString());
+		FileUtil.writeToFile(dir.getAbsolutePath() + "/training.t-s.A3", sbT2S.toString());
+	}
+	
+	private String generateAlignment(String[] tokens) {
+		//NULL ({  }) FOMElement ({ 1 }) .getTextElement ({ 2 }) QName ({ 3 })
+		StringBuilder sb = new StringBuilder();
+		sb.append("NULL ({  })");
+		for (int i = 0; i < tokens.length; i++) {
+			String t = tokens[i];
+			sb.append(" " + t + "({ " + (i+1) + " })");
+		}
+		return sb.toString();
+	}
+
+	private String generateHeader(String[] sTokens, String[] tTokens, int i) {
+		return "# sentence pair (" + i + ") source length " + sTokens.length + " target length " + tTokens.length + " alignment score : 0";
+	}
+
 	public void updateTokens() {
 		HashMap<String, HashMap<String, Integer>> tokenMapCount = new HashMap<>();
 		ArrayList<String> sourceSequences = readSource(outPath + "/source.txt"), targetSequences = readSource(outPath + "/target.txt");
