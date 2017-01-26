@@ -332,7 +332,7 @@ public class ProjectSequencesGenerator {
 		double e = 0;
 		for (double p : ps)
 			e += p * Math.log10(p) / Math.log10(2);
-		return e / ps.length;
+		return e;
 	}
 
 	private ArrayList<String> readSource(String path) {
