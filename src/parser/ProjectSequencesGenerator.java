@@ -321,7 +321,7 @@ public class ProjectSequencesGenerator {
 
 	private double entropy(String s, HashMap<String, Integer> mapCount) {
 		double[] ps = new double[mapCount.size()];
-		int sum = 0;
+		double sum = 0;
 		for (int v : mapCount.values())
 			sum += v;
 		int i = 0;
@@ -332,7 +332,7 @@ public class ProjectSequencesGenerator {
 		double e = 0;
 		for (double p : ps)
 			e += p * Math.log10(p) / Math.log10(2);
-		return e;
+		return -e;
 	}
 
 	private ArrayList<String> readSource(String path) {
