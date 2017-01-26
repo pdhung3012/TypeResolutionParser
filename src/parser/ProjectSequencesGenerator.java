@@ -73,7 +73,7 @@ public class ProjectSequencesGenerator {
 			stLocations = new PrintStream(new FileOutputStream(outPath + "/locations.txt"));
 			stSourceSequences = new PrintStream(new FileOutputStream(outPath + "/source.txt"));
 			stTargetSequences = new PrintStream(new FileOutputStream(outPath + "/target.txt"));
-			stLog = new PrintStream(new FileOutputStream("T:/temp/statType/test/log.txt"));
+			stLog = new PrintStream(new FileOutputStream(outPath + "/log.txt"));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
