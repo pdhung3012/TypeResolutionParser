@@ -1,15 +1,24 @@
 package parser;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-
-import org.hamcrest.core.Is;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import utils.FileUtil;
+import utils.NotifyingBlockingThreadPoolExecutor;
 
 public class TypeResolutionParsing {
+	private static final int THREAD_POOL_SIZE = 1;
+
+	private static final Callable<Boolean> blockingTimeoutCallback = new Callable<Boolean>() {
+		@Override
+		public Boolean call() throws Exception {
+			return true; // keep waiting
+		}
+	};
+	private static NotifyingBlockingThreadPoolExecutor pool = new NotifyingBlockingThreadPoolExecutor(THREAD_POOL_SIZE, THREAD_POOL_SIZE, 15, TimeUnit.SECONDS, 200, TimeUnit.MILLISECONDS, blockingTimeoutCallback);
+	
 
 	static String fop_output="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputCodeSequence\\";
 	static String fop_jdk="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\JDK_coreSource\\";
@@ -29,101 +38,102 @@ public class TypeResolutionParsing {
 	static int numOfSpecMethod=0;
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		try {
-			System.out.println("Start");
-			numFile=0;
-			numOfTotalMethod=0;
-			numOfSpecMethod=0;
-			int beginIndex=0;
-			int endIndex=50;
-			if(args.length>=2){
-				beginIndex=Integer.parseInt(args[0].trim());
-				endIndex=Integer.parseInt(args[1].trim());
+		System.out.println("Start");
+		numFile=0;
+		numOfTotalMethod=0;
+		numOfSpecMethod=0;
+		int beginIndex=0;
+		int endIndex=50;
+		if(args.length>=2){
+			beginIndex=Integer.parseInt(args[0].trim());
+			endIndex=Integer.parseInt(args[1].trim());
 
-				fn_source_success=beginIndex+"_"+endIndex+"_"+fn_source_success;
-				fn_source_full_success=beginIndex+"_"+endIndex+"_"+fn_source_full_success;
-				fn_target_success=beginIndex+"_"+endIndex+"_"+fn_target_success;
-				fn_target_full_success=beginIndex+"_"+endIndex+"_"+fn_target_full_success;
-				fn_cannotResolveType=beginIndex+"_"+endIndex+"_"+fn_cannotResolveType;
-			}
-
-			FileUtil.writeToFile(fop_output + fn_fail, "");
-			FileUtil.writeToFile(fop_output + fn_source_full_success, "");
-			FileUtil.writeToFile(fop_output + fn_source_success, "");
-			FileUtil.writeToFile(fop_output + fn_target_full_success, "");
-			FileUtil.writeToFile(fop_output + fn_target_success, "");
-			FileUtil.writeToFile(fop_output + fn_cannotResolveType, "");
-			File fDir = new File(fop_project);
-			File[] arrFileChildren = fDir.listFiles();
-			for(int i = 0; i < arrFileChildren.length; i++) {
-				if (beginIndex != -1 && (beginIndex > i || i > endIndex)) {
-					continue;
-				}
-
-				System.out.println("project " + i + ": " + arrFileChildren[i]);
-				ProjectSequencesGenerator psg = new ProjectSequencesGenerator(arrFileChildren[i].getAbsolutePath() + "\\");
-
-				psg.generateSequences("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\");
-
-				//				StringBuilder sbLocations = new StringBuilder();
-				//				StringBuilder sbSourceSequences = new StringBuilder();
-				//				StringBuilder sbTargetSequences = new StringBuilder();
-				//				
-				//				int countBuffer=0;
-				//				
-				//
-				//				for (int j = 0; j < psg.getLocations().size(); j++) {
-				//					String[] ss = psg.getSourceSequenceTokens().get(j), ts = psg.getTargetSequenceTokens().get(j);
-				//					
-				//					if(ss.length==ts.length){
-				//						boolean isCorrectStructure=true;
-				//						for (int k = 0; k < ss.length; k++) {
-				//							String s = ss[k], t = ts[k];
-				//							if(s.equals(t) || t.endsWith(s)){
-				//								
-				//							} else{
-				//								isCorrectStructure=false;
-				//							}
-				//						}
-				//						if(isCorrectStructure){
-				//							sbLocations.append(psg.getLocations().get(j)+"\n");
-				//							sbSourceSequences.append(psg.getSourceSequences().get(j)+"\n");
-				//							sbTargetSequences.append(psg.getTargetSequences().get(j)+"\n");
-				//							countBuffer++;
-				//							if(countBuffer==1000){
-				//								String fop_project="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\";
-				//								FileUtil.appendToFile(fop_project+"locations.txt", sbLocations.toString()+"\n");
-				//								FileUtil.appendToFile(fop_project+"source.txt", sbSourceSequences.toString()+"\n");
-				//								FileUtil.appendToFile(fop_project+"target.txt", sbTargetSequences.toString()+"\n");
-				//								sbLocations = new StringBuilder();
-				//								sbSourceSequences = new StringBuilder();
-				//								sbTargetSequences = new StringBuilder();
-				//							}
-				//						}
-				//					}
-				//					
-				//					
-				//				}
-				//				if(countBuffer>0){
-				//					String fop_project="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\";
-				//					FileUtil.appendToFile(fop_project+"locations.txt", sbLocations.toString()+"\n");
-				//					FileUtil.appendToFile(fop_project+"source.txt", sbSourceSequences.toString()+"\n");
-				//					FileUtil.appendToFile(fop_project+"target.txt", sbTargetSequences.toString()+"\n");
-				//				}
-			}
-			//			TypeResolutionVisitor visitor=new TypeResolutionVisitor(fop_jdk,fop_project,true);			
-			//     	 //  	visitor.parseTypeInformationOfProject(new File(fop_project));	        
-			//			//System.out.println("Number file: "+walk(fop_jdk+"java\\",visitor));
-			//			System.out.println("Number file: "+walk(fop_project,visitor));			
-			//			System.out.println("Number of spec method:" +numOfSpecMethod);
-			//			System.out.println("Number of all method:" +numOfTotalMethod);
-			System.out.println("End");
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			fn_source_success=beginIndex+"_"+endIndex+"_"+fn_source_success;
+			fn_source_full_success=beginIndex+"_"+endIndex+"_"+fn_source_full_success;
+			fn_target_success=beginIndex+"_"+endIndex+"_"+fn_target_success;
+			fn_target_full_success=beginIndex+"_"+endIndex+"_"+fn_target_full_success;
+			fn_cannotResolveType=beginIndex+"_"+endIndex+"_"+fn_cannotResolveType;
 		}
+
+		FileUtil.writeToFile(fop_output + fn_fail, "");
+		FileUtil.writeToFile(fop_output + fn_source_full_success, "");
+		FileUtil.writeToFile(fop_output + fn_source_success, "");
+		FileUtil.writeToFile(fop_output + fn_target_full_success, "");
+		FileUtil.writeToFile(fop_output + fn_target_success, "");
+		FileUtil.writeToFile(fop_output + fn_cannotResolveType, "");
+		File fDir = new File(fop_project);
+		final File[] arrFileChildren = fDir.listFiles();
+		for(int i = 0; i < arrFileChildren.length; i++) {
+			if (beginIndex != -1 && (beginIndex > i || i > endIndex)) {
+				continue;
+			}
+			System.out.println("project " + i + ": " + arrFileChildren[i]);
+			final String path = arrFileChildren[i].getAbsolutePath(), projectName = arrFileChildren[i].getName();
+			pool.execute(new Runnable() {
+				@Override
+				public void run() {
+					ProjectSequencesGenerator psg = new ProjectSequencesGenerator(path + "\\");
+					psg.generateSequences("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\" + projectName + "\\");
+		
+					//				StringBuilder sbLocations = new StringBuilder();
+					//				StringBuilder sbSourceSequences = new StringBuilder();
+					//				StringBuilder sbTargetSequences = new StringBuilder();
+					//				
+					//				int countBuffer=0;
+					//				
+					//
+					//				for (int j = 0; j < psg.getLocations().size(); j++) {
+					//					String[] ss = psg.getSourceSequenceTokens().get(j), ts = psg.getTargetSequenceTokens().get(j);
+					//					
+					//					if(ss.length==ts.length){
+					//						boolean isCorrectStructure=true;
+					//						for (int k = 0; k < ss.length; k++) {
+					//							String s = ss[k], t = ts[k];
+					//							if(s.equals(t) || t.endsWith(s)){
+					//								
+					//							} else{
+					//								isCorrectStructure=false;
+					//							}
+					//						}
+					//						if(isCorrectStructure){
+					//							sbLocations.append(psg.getLocations().get(j)+"\n");
+					//							sbSourceSequences.append(psg.getSourceSequences().get(j)+"\n");
+					//							sbTargetSequences.append(psg.getTargetSequences().get(j)+"\n");
+					//							countBuffer++;
+					//							if(countBuffer==1000){
+					//								String fop_project="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\";
+					//								FileUtil.appendToFile(fop_project+"locations.txt", sbLocations.toString()+"\n");
+					//								FileUtil.appendToFile(fop_project+"source.txt", sbSourceSequences.toString()+"\n");
+					//								FileUtil.appendToFile(fop_project+"target.txt", sbTargetSequences.toString()+"\n");
+					//								sbLocations = new StringBuilder();
+					//								sbSourceSequences = new StringBuilder();
+					//								sbTargetSequences = new StringBuilder();
+					//							}
+					//						}
+					//					}
+					//					
+					//					
+					//				}
+					//				if(countBuffer>0){
+					//					String fop_project="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\";
+					//					FileUtil.appendToFile(fop_project+"locations.txt", sbLocations.toString()+"\n");
+					//					FileUtil.appendToFile(fop_project+"source.txt", sbSourceSequences.toString()+"\n");
+					//					FileUtil.appendToFile(fop_project+"target.txt", sbTargetSequences.toString()+"\n");
+					//				}
+				}
+			});
+		}
+		//			TypeResolutionVisitor visitor=new TypeResolutionVisitor(fop_jdk,fop_project,true);			
+		//     	 //  	visitor.parseTypeInformationOfProject(new File(fop_project));	        
+		//			//System.out.println("Number file: "+walk(fop_jdk+"java\\",visitor));
+		//			System.out.println("Number file: "+walk(fop_project,visitor));			
+		//			System.out.println("Number of spec method:" +numOfSpecMethod);
+		//			System.out.println("Number of all method:" +numOfTotalMethod);
+		System.out.println("End");
+		
+		try {
+			pool.await(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (final InterruptedException e) { }
 	}
 
 	public static int walk( String projPath,TypeResolutionVisitor visitor) {
