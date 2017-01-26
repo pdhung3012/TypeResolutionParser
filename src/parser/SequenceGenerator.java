@@ -746,12 +746,12 @@ public class SequenceGenerator extends ASTVisitor {
 		String name = "."+ node.getName().getIdentifier() + "()";
 		this.partialTokens.append(" " + name + " ");
 		if (!USE_SIMPLE_METHOD_NAME && tb != null 
-				&& !name.equals(".toString()") 
-				&& !name.equals(".equals()") 
-				&& !name.equals(".clone()") 
-				&& !name.equals(".getClass()")
-				&& !name.equals(".hashCode()")
-				&& !name.equals(".valueOf()")
+//				&& !name.equals(".toString()") 
+//				&& !name.equals(".equals()") 
+//				&& !name.equals(".clone()") 
+//				&& !name.equals(".getClass()")
+//				&& !name.equals(".hashCode()")
+//				&& !name.equals(".valueOf()")
 				)
 			name = tb.getQualifiedName() + name;
 		this.fullTokens.append(" " + name + " ");
