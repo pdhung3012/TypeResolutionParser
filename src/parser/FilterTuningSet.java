@@ -19,16 +19,19 @@ public class FilterTuningSet {
 	}
 	
 	public static void main(String[] args){
-		String[] arrTrainSource=FileUtil.getFileContent("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\first50Project\\train.s").trim().split("\n");
-		String[] arrTrainTarget=FileUtil.getFileContent("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\first50Project\\train.t").trim().split("\n");
-		String fp_tuneSource="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\first50Project\\tune.s";
-		String fp_tuneTarget="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\first50Project\\tune.t";
+		String[] arrTrainSource=FileUtil.getFileContent("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\train.s").trim().split("\n");
+		String[] arrTrainTarget=FileUtil.getFileContent("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\train.t").trim().split("\n");
+		String[] arrLocationTarget=FileUtil.getFileContent("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\train_location.t").trim().split("\n");
+		String fp_tuneSource="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\tune.s";
+		String fp_tuneTarget="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\tune.t";
+		String fp_tuneLocation="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\tune_location.t";
+		
 		int countVocabulary=0;
 		HashSet<String> setVocab=new HashSet<String>();
-		int numTuneSet=1200;
+		int numTuneSet=500;
 		
 		for(int i=0;i<arrTrainTarget.length;i++){
-			String[] arrItems=arrTrainTarget[i].trim().split("\\s");
+			String[] arrItems=arrTrainTarget[i].trim().split("\\s+");
 			for(int j=0;j<arrItems.length;j++){
 				if(!arrItems[j].trim().isEmpty()&&!setVocab.contains(arrItems[j].trim())){
 					setVocab.add(arrItems[j]);
@@ -61,9 +64,9 @@ public class FilterTuningSet {
 	  FileUtil.writeToFile(fp_tuneTarget, "");
 	  int index=0,i=0;
 	  while(index<numTuneSet){
-		  if(arrTrainTarget[i].split("\\s").length<100){
-			  FileUtil.appendToFile(fp_tuneSource, arrTrainSource[i]+"\n");
-			  FileUtil.appendToFile(fp_tuneTarget, arrTrainTarget[i]+"\n");
+		  if(arrTrainTarget[i].trim().split("\\s+").length>10&&arrTrainTarget[i].trim().split("\\s+").length<=50){
+			  FileUtil.appendToFile(fp_tuneSource, arrTrainSource[i].trim()+"\n");
+			  FileUtil.appendToFile(fp_tuneTarget, arrTrainTarget[i].trim()+"\n");
 			  index++;
 
 		  }

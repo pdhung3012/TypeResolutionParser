@@ -8,7 +8,7 @@ public class EvaluationTypeResolution {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		String fop_dirTranslate="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\first50Project\\";
+		String fop_dirTranslate="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\";
 		String fn_test="test.t";
 		
 		//check length
@@ -37,7 +37,6 @@ public class EvaluationTypeResolution {
 //			setOracles=new HashSet<String>();
 			String[] arrItemTrans=arrTranslations[i].trim().split("\\s+");
 			String[] arrItemOracle=arrOracles[i].trim().split("\\s+");
-			boolean isCorrectStructure=true;
 			boolean isCSInSentence=true,isCLInSentence=true;
 //			System.out.println(arrTranslations[i]);
 //			System.out.println(arrOracles[i]);
@@ -56,7 +55,7 @@ public class EvaluationTypeResolution {
 			
 			for(int j=0;j<arrItemOracle.length;j++){
 				
-				if(arrItemOracle[j].trim().contains(".")&&(!arrItemOracle[j].trim().startsWith(".")) ){
+				if(arrItemOracle[j].trim().contains(".")||arrItemOracle[j].trim().equals("Node#type")||arrItemOracle[j].trim().equals("Node") ){
 				
 				} else{
 					if(j<arrItemTrans.length&&arrItemOracle[j].equals(arrItemTrans[j])){
@@ -71,34 +70,43 @@ public class EvaluationTypeResolution {
 				
 			}
 			
-			if(!isCSInSentence){
+			if(isCSInSentence){
 				for(int j=0;j<arrItemOracle.length;j++){
 					
-					if(arrItemOracle[j].trim().contains(".")&&(!arrItemOracle[j].trim().startsWith(".")) ){
+					if(arrItemOracle[j].trim().contains(".") ){
 						//setOracles.add(arrItemOracle[j].trim());
 						boolean isRunInWhile=false;
-						System.out.println("Index type translation: "+indexTypeTranslation);
+					//	System.out.println("Index type translation: "+indexTypeTranslation);
 						while(indexTypeTranslation<arrItemTrans.length){
 							isRunInWhile=true;
-							if(arrItemTrans[indexTypeTranslation].trim().contains(".")&&(!arrItemTrans[indexTypeTranslation].trim().startsWith("."))){
-								
-								if(arrItemOracle[j].equals(arrItemTrans[indexTypeTranslation])){
-									numOfGoodPerSentence++;								
-								} else{
-									numOfInCorrectPerSentence++;
-									strIncorrect+=arrItemTrans[indexTypeTranslation]+" ( "+arrItemOracle[j]+" ) ";
-								}
+							
+							if((!arrItemOracle[j].equals(arrItemTrans[indexTypeTranslation]))&&arrItemOracle[j].endsWith(arrItemTrans[indexTypeTranslation])){
+								numOfOutOfVocabPerSentence++;
+								strOutVocab+=arrItemTrans[indexTypeTranslation]+" ( "+arrItemOracle[j]+" ) ";
 								indexTypeTranslation++;
 								break;
-								
 							} else{
-								if((!arrItemTrans[indexTypeTranslation].trim().startsWith("."))&&(!arrItemOracle[j].equals(arrItemTrans[indexTypeTranslation]))&&arrItemOracle[j].endsWith(arrItemTrans[indexTypeTranslation])){
-									numOfOutOfVocabPerSentence++;
-									strOutVocab+=arrItemTrans[indexTypeTranslation]+" ( "+arrItemOracle[j]+" ) ";
+								if(arrItemTrans[indexTypeTranslation].trim().contains(".")){									
+									if(arrItemOracle[j].equals(arrItemTrans[indexTypeTranslation])){
+										numOfGoodPerSentence++;								
+									} else{
+										numOfInCorrectPerSentence++;
+										strIncorrect+=arrItemTrans[indexTypeTranslation]+" ( "+arrItemOracle[j]+" ) ";
+									}
+									indexTypeTranslation++;
 									break;
+									
+								} else{
+//									if((!arrItemTrans[indexTypeTranslation].trim().startsWith("."))&&(!arrItemOracle[j].equals(arrItemTrans[indexTypeTranslation]))&&arrItemOracle[j].endsWith(arrItemTrans[indexTypeTranslation])){
+//										numOfOutOfVocabPerSentence++;
+//										strOutVocab+=arrItemTrans[indexTypeTranslation]+" ( "+arrItemOracle[j]+" ) ";
+//										break;
+//									}
+									indexTypeTranslation++;
 								}
-								indexTypeTranslation++;
 							}
+							
+							
 							
 						}
 						
@@ -107,7 +115,7 @@ public class EvaluationTypeResolution {
 						}
 						
 					} else{
-						if(j<arrItemTrans.length&&arrItemOracle[j].equals(arrItemTrans[j])){
+						if(j<arrItemTrans.length&&(arrItemOracle[j].equals(arrItemTrans[j])||arrItemOracle[j].endsWith(arrItemTrans[j]))){
 							//isCSInSentence=true;
 							
 							
@@ -121,24 +129,24 @@ public class EvaluationTypeResolution {
 			}
 			
 			
-			if(!isCSInSentence){
+			if(isCSInSentence){
 				countCorrectCSInSentence++;
 			}
 
 			FileUtil.appendToFile(fop_dirTranslate+fn_evaluatedResult, isCLInSentence+"\t"+isCSInSentence+"\t"+arrItemOracle.length+"\t"+arrItemTrans.length+"\n");
 			FileUtil.appendToFile(fop_dirTranslate+fn_typeStructureResults, numOfGoodPerSentence+"\t"+numOfInCorrectPerSentence+"\t"+numOfOutOfVocabPerSentence+"\n");
 			
-			if(!isCSInSentence){
+			//if(!isCSInSentence){
 				countOfGoodPerSentence+=numOfGoodPerSentence;
 				countOfInCorrectPerSentence+=numOfInCorrectPerSentence;
 				countOfOutOfVocabPerSentence+=numOfOutOfVocabPerSentence;
 				
-				FileUtil.appendToFile(fop_dirTranslate+"67_incorrect_source.txt",arrSource[i]+"\n");
+			//	FileUtil.appendToFile(fop_dirTranslate+"67_incorrect_source.txt",arrSource[i]+"\n");
 //				FileUtil.appendToFile(fop_dirTranslate+"67_incorrect_translated.txt",arrTranslations[i]+"\n");
 				
 				FileUtil.appendToFile(fop_dirTranslate+fn_OutOfVocab,strOutVocab+"\n");
 				FileUtil.appendToFile(fop_dirTranslate+fn_IncorrectTranslate, strIncorrect+"\n");
-			}
+			//}
 			
 			
 			

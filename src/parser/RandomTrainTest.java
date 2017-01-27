@@ -99,10 +99,10 @@ public class RandomTrainTest {
 	//_createTrainTestSet
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		String fop_dir="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\first50Project\\";
+		String fop_dir="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\";
 		//String[] arrFilesSource=FileUtil.getFileContent(fop_dir+"full_source.txt").trim().split("\n");
 		//String[] arrFilesTarget=FileUtil.getFileContent(fop_dir+"full_target.txt").trim().split("\n");
-		int totalRowForDataset=5000;
+		int totalRowForDataset=3000;
 		int numberGetRandom=totalRowForDataset/10;
 		HashSet<Integer> setTest=new HashSet<Integer>();
 		int indexCountTest=0,indexCountTrain=0,indexCount=0,countBufferTest=0,countBufferTrain=0;
@@ -120,7 +120,7 @@ public class RandomTrainTest {
 		StringBuilder bdTrainSource=new StringBuilder();
 		StringBuilder bdTrainTarget=new StringBuilder();
 		int indexChoose=0;
-		try (BufferedReader br = new BufferedReader(new FileReader(fop_dir+"full_source.txt"))) {
+		try (BufferedReader br = new BufferedReader(new FileReader(fop_dir+"source.txt"))) {
 		    String line;
 		    while ((line = br.readLine()) != null) {
 		       // process the line.
@@ -173,7 +173,7 @@ public class RandomTrainTest {
 		}
 		
 		indexChoose=0;
-		try (BufferedReader br = new BufferedReader(new FileReader(fop_dir+"full_target.txt"))) {
+		try (BufferedReader br = new BufferedReader(new FileReader(fop_dir+"target.txt"))) {
 		    String line;
 		    while ((line = br.readLine()) != null) {
 		       // process the line.
