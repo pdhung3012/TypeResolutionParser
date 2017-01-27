@@ -298,7 +298,7 @@ public class ProjectSequencesGenerator {
 		sb.append("NULL ({  })");
 		for (int i = 0; i < tokens.length; i++) {
 			String t = tokens[i];
-			sb.append(" " + t + "({ " + (i+1) + " })");
+			sb.append(" " + t + " ({ " + (i+1) + " })");
 		}
 		return sb.toString();
 	}
