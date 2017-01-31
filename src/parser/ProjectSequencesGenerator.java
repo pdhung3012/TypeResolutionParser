@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FileASTRequestor;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -24,8 +25,6 @@ import utils.FileUtil;
 
 public class ProjectSequencesGenerator {
 	private static final boolean PARSE_INDIVIDUAL_SRC = false, SCAN_FILES_FRIST = false;
-	private static final int MAX_TOKEN_MAPPINGS = 1;
-	private static final double MAX_ENTROPY = 1.0;
 	
 	private String inPath, outPath;
 	private boolean testing = false;
@@ -65,6 +64,10 @@ public class ProjectSequencesGenerator {
 //	}
 
 	public void generateSequences(String outPath) {
+		generateSequences(true, null, outPath);
+	}
+
+	public int generateSequences(final boolean keepUnresolvables, final String lib, final String outPath) {
 		this.outPath = outPath;
 		ArrayList<String> rootPaths = getRootPaths();
 		String[] jarPaths = getJarPaths();
@@ -75,26 +78,12 @@ public class ProjectSequencesGenerator {
 			stTargetSequences = new PrintStream(new FileOutputStream(outPath + "/target.txt"));
 			stLog = new PrintStream(new FileOutputStream(outPath + "/log.txt"));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			System.err.println(e.getMessage());
+			return 0;
 		}
-		
+		int numOfSequences = 0;
 		for (String rootPath : rootPaths) {
 			String[] sourcePaths = getSourcePaths(rootPath, new String[]{".java"});
-			FileASTRequestor r = new FileASTRequestor() {
-				@Override
-				public void acceptAST(String sourceFilePath, CompilationUnit ast) {
-					if (ast.getPackage() == null)
-						return;
-					System.out.println(sourceFilePath);
-					stLog.println(sourceFilePath);
-					for (int i = 0; i < ast.types().size(); i++) {
-						if (ast.types().get(i) instanceof TypeDeclaration) {
-							TypeDeclaration td = (TypeDeclaration) ast.types().get(i);
-							generateSequence(td, sourceFilePath, "");
-						}
-					}
-				}
-			};
 			
 			@SuppressWarnings("rawtypes")
 			Map options = JavaCore.getOptions();
@@ -107,7 +96,50 @@ public class ProjectSequencesGenerator {
 			parser.setResolveBindings(true);
 			parser.setBindingsRecovery(false);
 			
+			StatTypeFileASTRequestor r = new StatTypeFileASTRequestor(keepUnresolvables, lib);
 			parser.createASTs(sourcePaths, null, new String[0], r, null);
+			numOfSequences += r.numOfSequences;
+		}
+		return numOfSequences;
+	}
+	
+	private class StatTypeFileASTRequestor extends FileASTRequestor {
+		int numOfSequences = 0;
+		private boolean keepUnresolvables;
+		private String lib;
+		
+		public StatTypeFileASTRequestor(boolean keepUnresolvables, String lib) {
+			this.keepUnresolvables = keepUnresolvables;
+			this.lib = lib;
+		}
+
+		@Override
+		public void acceptAST(String sourceFilePath, CompilationUnit ast) {
+			if (ast.getPackage() == null)
+				return;
+			if (lib != null) {
+				if (ast.imports() == null)
+					return;
+				boolean hasLib = false;
+				for (int i = 0; i < ast.imports().size(); i++) {
+					ImportDeclaration ic = (ImportDeclaration) ast.imports().get(i);
+					if (ic.getName().getFullyQualifiedName().startsWith(lib)) {
+						hasLib = true;
+						break;
+					}
+				}
+				if (!hasLib)
+					return;
+			}
+			if (testing)
+				System.out.println(sourceFilePath);
+			stLog.println(sourceFilePath);
+			for (int i = 0; i < ast.types().size(); i++) {
+				if (ast.types().get(i) instanceof TypeDeclaration) {
+					TypeDeclaration td = (TypeDeclaration) ast.types().get(i);
+					numOfSequences += generateSequence(keepUnresolvables, lib, td, sourceFilePath, "");
+				}
+			}
 		}
 	}
 
@@ -173,7 +205,8 @@ public class ProjectSequencesGenerator {
 		}
 	}
 
-	private void generateSequence(TypeDeclaration td, String path, String outer) {
+	private int generateSequence(boolean keepUnresolvables, String lib, TypeDeclaration td, String path, String outer) {
+		int numOfSequences = 0;
 		String name = outer.isEmpty() ? td.getName().getIdentifier() : outer + "." + td.getName().getIdentifier();
 		String className = td.getName().getIdentifier(), superClassName = null;
 		if (td.getSuperclassType() != null)
@@ -185,15 +218,30 @@ public class ProjectSequencesGenerator {
 			int numofExpressions = sg.getNumOfExpressions(), numOfResolvedExpressions = sg.getNumOfResolvedExpressions();
 			String source = sg.getPartialSequence(), target = sg.getFullSequence();
 			String[] sTokens = sg.getPartialSequenceTokens(), tTokens = sg.getFullSequenceTokens();
-			if (sTokens.length > 0 && tTokens.length > 0 && numofExpressions > 0/* && numofExpressions == numOfResolvedExpressions*/) {
-//				this.locations.add(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%");
-//				this.sourceSequences.add(source);
-//				this.targetSequences.add(target);
-//				this.sourceSequenceTokens.add(sTokens);
-//				this.targetSequenceTokens.add(tTokens);
-				stLocations.print(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%" + "\n");
-				stSourceSequences.print(source + "\n");
-				stTargetSequences.print(target + "\n");
+			if (sTokens.length == tTokens.length 
+					&& sTokens.length > 2 && numofExpressions > 0 
+					&& (keepUnresolvables || numofExpressions == numOfResolvedExpressions)) {
+				boolean hasLib = true;
+				if (lib != null && !lib.isEmpty()) {
+					hasLib = false;
+					for (String t : tTokens) {
+						if (t.startsWith(lib)) {
+							hasLib = true;
+							break;
+						}
+					}
+				}
+				if (hasLib) {
+//					this.locations.add(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%");
+//					this.sourceSequences.add(source);
+//					this.targetSequences.add(target);
+//					this.sourceSequenceTokens.add(sTokens);
+//					this.targetSequenceTokens.add(tTokens);
+					stLocations.print(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%" + "\n");
+					stSourceSequences.print(source + "\n");
+					stTargetSequences.print(target + "\n");
+					numOfSequences++;
+				}
 			}
 			if (testing) {
 				if (sTokens.length != tTokens.length)
@@ -208,7 +256,8 @@ public class ProjectSequencesGenerator {
 			}
 		}
 		for (TypeDeclaration inner : td.getTypes())
-			generateSequence(inner, path, name);
+			numOfSequences += generateSequence(keepUnresolvables, lib, inner, path, name);
+		return numOfSequences;
 	}
 
 	private String getParameters(MethodDeclaration method) {
@@ -307,70 +356,6 @@ public class ProjectSequencesGenerator {
 		return "# sentence pair (" + i + ") source length " + sTokens.length + " target length " + tTokens.length + " alignment score : 0";
 	}
 
-	public void updateTokens() {
-		HashMap<String, HashMap<String, Integer>> tokenMapCount = new HashMap<>();
-		ArrayList<String> sourceSequences = readSource(outPath + "/source.txt"), targetSequences = readSource(outPath + "/target.txt");
-		for (int i = 0; i < sourceSequences.size(); i++) {
-			String source = sourceSequences.get(i), target = targetSequences.get(i);
-			String[] sTokens = source.trim().split(" "), tTokens = target.trim().split(" ");
-			for (int j = 0; j < sTokens.length; j++) {
-				String s = sTokens[j], t = tTokens[j];
-				HashMap<String, Integer> mapCount = tokenMapCount.get(s);
-				if (mapCount == null) {
-					mapCount = new HashMap<>();
-					tokenMapCount.put(s, mapCount);
-				}
-				if (mapCount.containsKey(t))
-					mapCount.put(t, mapCount.get(t) + 1);
-				else
-					mapCount.put(t, 1);
-			}
-		}
-		HashSet<String> commonTokens = new HashSet<>();
-		for (String s : tokenMapCount.keySet()) {
-			HashMap<String, Integer> mapCount = tokenMapCount.get(s);
-//			if (mapCount.size() > MAX_TOKEN_MAPPINGS)
-//				commonTokens.add(s);
-			double entropy = entropy(s, mapCount);
-			if (entropy > MAX_ENTROPY)
-				commonTokens.add(s);
-		}
-		ArrayList<String> updatedSequences = new ArrayList<>();
-		for (int i = 0; i < sourceSequences.size(); i++) {
-			StringBuilder sb = new StringBuilder();
-			String source = sourceSequences.get(i), target = targetSequences.get(i);
-			String[] sTokens = source.trim().split(" "), tTokens = target.trim().split(" ");
-			for (int j = 0; j < sTokens.length; j++) {
-				String s = sTokens[j], t = tTokens[j];
-				if (commonTokens.contains(s))
-					sb.append(s + " ");
-				else
-					sb.append(t + " ");
-			}
-			updatedSequences.add(sb.toString().trim());
-		}
-		File dir = new File(outPath + "_updated");
-		if (!dir.exists())
-			dir.mkdirs();
-		FileUtil.writeToFile(dir.getAbsolutePath() + "/source.txt", sourceSequences);
-		FileUtil.writeToFile(dir.getAbsolutePath() + "/target.txt", updatedSequences);
-	}
-
-	private double entropy(String s, HashMap<String, Integer> mapCount) {
-		double[] ps = new double[mapCount.size()];
-		double sum = 0;
-		for (int v : mapCount.values())
-			sum += v;
-		int i = 0;
-		for (int v : mapCount.values()) {
-			ps[i] = v / sum;
-			i++;
-		}
-		double e = 0;
-		for (double p : ps)
-			e += p * Math.log10(p) / Math.log10(2);
-		return -e;
-	}
 
 	private ArrayList<String> readSource(String path) {
 		ArrayList<String> sequences = new ArrayList<>();
