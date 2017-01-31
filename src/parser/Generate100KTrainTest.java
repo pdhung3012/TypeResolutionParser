@@ -43,8 +43,8 @@ public class Generate100KTrainTest {
 				String fp_locations=fop_sequenceInput+"\\"+projName+"\\locations.txt";
 				String fp_source=fop_sequenceInput+"\\"+projName+"\\source.txt";
 				String fp_target=fop_sequenceInput+"\\"+projName+"\\target.txt";
-				String fp_alignmentST=fop_sequenceInput+"\\"+projName+"\\~alignment\\training.s-t.A3";
-				String fp_alignmentTS=fop_sequenceInput+"\\"+projName+"\\~alignment\\training.t-s.A3";
+				String fp_alignmentST=fop_sequenceInput+"\\"+projName+"\\-alignment\\training.s-t.A3";
+				String fp_alignmentTS=fop_sequenceInput+"\\"+projName+"\\-alignment\\training.t-s.A3";
 				
 				String[] arrLocation=utils.FileUtil.getFileContent(fp_locations).split("\n");
 				String[] arrSource=utils.FileUtil.getFileContent(fp_source).split("\n");
@@ -53,11 +53,13 @@ public class Generate100KTrainTest {
 				String[] arrAlignTS=utils.FileUtil.getFileContent(fp_alignmentTS).split("\n");
 				
 				for(int k=0;k<arrTarget.length;k++){
-					String[] arrLocationInfo=arrLocation[k].split("\t");
-					String percentResolve=arrLocation[arrLocationInfo.length-1];
-					String[] arrTokenTarget=arrTarget[k].split("\\s+");
-					if(arrTarget[k].contains(fn_libName)&&arrTokenTarget.length>=3&&arrTokenTarget.length<25&&arrTarget[k].contains(fn_libName)){
+					String[] arrLocationInfo=arrLocation[k].split("\\t");
+					String percentResolve=arrLocationInfo[arrLocationInfo.length-1];
+					String[] arrTokenTarget=arrTarget[k].trim().split("\\s+");
+					System.out.println(percentResolve);
+					if(percentResolve.equals("100%")&&arrTokenTarget.length>=3&&arrTokenTarget.length<25&&arrTarget[k].contains(fn_libName)){
 						//add to corpus
+						
 						FileUtil.appendToFile(fop_output+fn_libName+".source.txt", arrSource[k]+"\n");
 						FileUtil.appendToFile(fop_output+fn_libName+".target.txt", arrTarget[k]+"\n");
 						FileUtil.appendToFile(fop_output+fn_libName+".location.txt", arrLocation[k]+"\n");
