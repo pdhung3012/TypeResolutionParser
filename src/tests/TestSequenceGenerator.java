@@ -36,9 +36,10 @@ public class TestSequenceGenerator {
 	
 	void test() {
 //		ProjectSequencesGenerator psg = new ProjectSequencesGenerator(".", true);
-		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("resources", true);
+//		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("resources", true);
 //		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("T:/repos/lucene-solr", true);
 //		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("F:/github/repos-IntelliJ/JetBrains/intellij-community", true);
+		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("G:/github/repos-5stars-50commits/JetBrains/adt-tools-base", true);
 		psg.generateSequences("T:/temp/statType/test");
 //		psg.updateTokens();
 		psg.generateAlignment();

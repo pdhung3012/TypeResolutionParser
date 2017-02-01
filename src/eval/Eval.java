@@ -11,7 +11,7 @@ import utils.FileUtil;
 public class Eval {
 
 	public static void main(String[] args) {
-		String dir = "T:/temp/statType";
+		String dir = "T:/temp/statType/SOF-40";
 		ArrayList<String> trainSourceSequences = readSource(dir + "/train.s"), trainTargetSequences = readSource(dir + "/train.t");
 		HashSet<String> sourceVocabulary = new HashSet<>(), targetVocabulary = new HashSet<>();
 		for (int i = 0; i < trainSourceSequences.size(); i++) {
@@ -83,7 +83,7 @@ public class Eval {
 		System.out.println("In-vocabulary accuracy: " + numOfAllCorrect*1.0 / (numOfAllTokens - numOfAllOut));
 		System.out.println("Sequences: " + testSourceSequences.size());
 		System.out.println("Correct sequences: " + numOfCorrectSquences);
-		System.out.println("Correct OOV sequences: " + numOfOutSequences);
+		System.out.println("OOV sequences: " + numOfOutSequences);
 		System.out.println();
 		ArrayList<String> l = new ArrayList<>(numOverPackages.keySet());
 		Collections.sort(l);

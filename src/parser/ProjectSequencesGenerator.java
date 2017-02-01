@@ -69,9 +69,10 @@ public class ProjectSequencesGenerator {
 
 	public int generateSequences(final boolean keepUnresolvables, final String lib, final String outPath) {
 		this.outPath = outPath;
-		ArrayList<String> rootPaths = getRootPaths();
 		String[] jarPaths = getJarPaths();
+		ArrayList<String> rootPaths = getRootPaths();
 		
+		new File(outPath).mkdirs();
 		try {
 			stLocations = new PrintStream(new FileOutputStream(outPath + "/locations.txt"));
 			stSourceSequences = new PrintStream(new FileOutputStream(outPath + "/source.txt"));
@@ -308,7 +309,6 @@ public class ProjectSequencesGenerator {
 	}
 
 	private void getJarFiles(File file, HashMap<String, File> jarFiles) {
-
 		if (file.isDirectory()) {
 			for (File sub : file.listFiles())
 				getJarFiles(sub, jarFiles);
@@ -316,6 +316,10 @@ public class ProjectSequencesGenerator {
 			File f = jarFiles.get(file.getName());
 			if (f == null || file.lastModified() > f.lastModified())
 				jarFiles.put(file.getName(), file);
+		} else if (file.getName().equals("build.gradle")) {
+			ClassPathUtil.getGradleDependencies(file, this.inPath + "/lib");
+		} else if (file.getName().equals("pom.xml")) {
+			ClassPathUtil.getPomDependencies(file, this.inPath + "/lib");
 		}
 	}
 	
