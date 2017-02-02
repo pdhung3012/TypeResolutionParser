@@ -2,15 +2,28 @@ package parser;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Scanner;
+
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Repository;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import utils.FileUtil;
 
@@ -37,9 +50,7 @@ public class ClassPathUtil {
 						if (ch == '\'' || ch == '\"')
 							right = right.substring(1, right.length()-1);
 						if (right.toUpperCase().endsWith("-" + "SNAPSHOT"))
-							right = right.substring(0, right.length() - ("-" + "SNAPSHOT").length());
-						if (right.toUpperCase().endsWith("-" + "SN"))
-							right = right.substring(0, right.length() - ("-" + "SN").length());
+							right = right.substring(0, right.length() - ("-" + "SNAPSHOT").length()) + ".0";
 						variableValue.put(left, right);
 					}
 				}
@@ -137,12 +148,12 @@ public class ClassPathUtil {
 	}
 
 	private static String strip(String s) {
+		if (s == null)
+			return "null";
 		char ch = s.charAt(0);
 		if (Character.isLetter(ch) || Character.isDigit(ch)) {
 			if (s.toUpperCase().endsWith("-" + "SNAPSHOT"))
-				s = s.substring(0, s.length() - ("-" + "SNAPSHOT").length());
-			if (s.toUpperCase().endsWith("-" + "SN"))
-				s = s.substring(0, s.length() - ("-" + "SN").length());
+				s = s.substring(0, s.length() - ("-" + "SNAPSHOT").length()) + ".0";
 			return s;
 		}
 		if (ch == '(' || ch == '\'' || ch =='\"')
@@ -171,107 +182,171 @@ public class ClassPathUtil {
 			return getGradleDependencyInfo(line.substring(1, line.length()-1).trim());
 		return values;
 	}
-
-	public static void getPomDependencies(File file, String outPath) {
-		String content = FileUtil.getFileContent(file.getAbsolutePath());
-		HashMap<String, String> variableValue = readVariableValue(content);
-		int s = content.indexOf("<dependencies>");
-		if (s == -1)
-			return;
-		s += "<dependencies>".length();
-		int e = content.indexOf("</dependencies>");
-		if (e == -1)
-			return;
-		content = content.substring(s, e);
-		e = 0;
-		while (true) {
-			int ds = content.indexOf("<dependency>", e);
-			if (ds == -1)
-				break;
-			ds += "<dependency>".length();
-			int de = content.indexOf("</dependency>", ds);
-			String[] values = read(content.substring(ds, de), new String[]{"groupId", "artifactId", "version"});
-			if (values == null) {
-				e = de + "</dependency>".length();
-				continue;
+	
+	static class PomFile {
+		static HashSet<String> globalRepoLinks = new HashSet<>();
+		static HashMap<String, String> globalProperties = new HashMap<>(), globalManagedDependencies = new HashMap<>();
+		
+		private String id, parent;
+		private String[] repoLinks;
+		HashMap<String, String> properties = new HashMap<>();
+		HashMap<String, String> managedDependencies = new HashMap<>();
+		
+		public PomFile(String id, String parent, Properties properties, List<Dependency> managedDependencies, List<Repository> repos, HashMap<String, PomFile> pomFiles) {
+			this.id = id;
+			this.parent = parent;
+			for (Entry<Object, Object> e : properties.entrySet()) {
+				this.properties.put(e.getKey().toString(), e.getValue().toString());
+				globalProperties.put(e.getKey().toString(), e.getValue().toString());
 			}
-			for (int i = 0; i < values.length; i++) {
-				String v = values[i].trim();
-				if (v.startsWith("$")) {
-					v = v.substring(1);
-					if (v.startsWith("{") && v.endsWith("}"))
-						v = v.substring(1, v.length()-1).trim();
-					if (variableValue.containsKey(v)) {
-						v = variableValue.get(v);
-						if (v.startsWith("[")) {
-							v = v.substring(1, v.length() - 1);
-							int index = v.indexOf(",");
-							if (index > -1)
-								v = v.substring(0, index);
+			if (managedDependencies != null)
+				for (Dependency d : managedDependencies) {
+					String v = d.getVersion();
+					if (v.startsWith("$")) {
+						v = v.substring(1);
+						if (v.startsWith("{") && v.endsWith("}"))
+							v = v.substring(1, v.length()-1).trim();
+						v = getPropertyValue(v, pomFiles);
+						if (v != null) {
+							if (v.startsWith("[")) {
+								v = v.substring(1, v.length() - 1);
+								int index = v.indexOf(",");
+								if (index > -1)
+									v = v.substring(0, index);
+							}
 						}
-						values[i] = v;
+					}
+					this.managedDependencies.put(d.getGroupId() + ":" + d.getArtifactId(), v);
+					globalManagedDependencies.put(d.getGroupId() + ":" + d.getArtifactId(), v);
+				}
+			if (repos != null) {
+				repoLinks = new String[repos.size()];
+				for (int i = 0; i < repos.size(); i++) {
+					this.repoLinks[i] = repos.get(i).getUrl();
+					globalRepoLinks.add(repos.get(i).getUrl());
+				}
+			}
+		}
+
+		public void getDependencies(List<Dependency> dependencies, HashMap<String, PomFile> pomFiles, String outPath) {
+			for (Dependency dep : dependencies) {
+				String[] values = new String[]{dep.getGroupId(), dep.getArtifactId(), dep.getVersion()};
+				for (int i = 0; i < values.length; i++) {
+					String v = values[i];
+					if (v != null) {
+						v = v.trim();
+						if (v.startsWith("$")) {
+							v = v.substring(1);
+							if (v.startsWith("{") && v.endsWith("}"))
+								v = v.substring(1, v.length()-1).trim();
+							String val = getPropertyValue(v, pomFiles);
+							if (val == null)
+								v = globalProperties.get(v);
+							if (v != null) {
+								if (v.startsWith("[")) {
+									v = v.substring(1, v.length() - 1);
+									int index = v.indexOf(",");
+									if (index > -1)
+										v = v.substring(0, index);
+								}
+								values[i] = v;
+							}
+						}
+					} else if (i == 2) {
+						v = getManagedDepedency(values[0] + ":" + values[1], pomFiles);
+						if (v == null)
+							v = globalManagedDependencies.get(values[0] + ":" + values[1]);
+						if (v != null)
+							values[i] = v;
+					}
+				}
+				values = strip(values);
+				values[2] = values[2].replace('+', '0');
+				String name = values[1] + "-" + values[2] + ".jar";
+				String[] repoLinks = globalRepoLinks.toArray(new String[globalRepoLinks.size() + 1]);
+				repoLinks[repoLinks.length-1] = "http://central.maven.org/maven2/";
+				for (String link : repoLinks) {
+					link += values[0].replace('.', '/');
+					link += "/" + values[1];
+					link += "/" + values[2];
+					link += "/" + name;
+					try {
+						getFile(outPath, name, link);
+						break;
+					} catch (IOException ex) {
+					}
+				}
+				if (!(new File(outPath + "/" + name).exists())) {
+					String prefix = "http://central.maven.org/maven2/";
+					prefix += values[0].replace('.', '/');
+					prefix += "/" + values[1] + "/";
+					try {
+						getFile(outPath, prefix, values);
+						break;
+					} catch (IOException e1) {
+						System.err.println("Cannot download dependency " + values[0] + ":" + values[1] + ":" + values[2]);
 					}
 				}
 			}
-			values = strip(values);
-			values[2] = values[2].replace('+', '0');
-			String name = values[1] + "-" + values[2] + ".jar";
-			String link = "http://central.maven.org/maven2/";
-			link += values[0].replace('.', '/');
-			link += "/" + values[1];
-			link += "/" + values[2];
-			link += "/" + name;
-			try {
-				getFile(outPath, name, link);
-			} catch (IOException ex) {
-				String prefix = "http://central.maven.org/maven2/";
-				prefix += values[0].replace('.', '/');
-				prefix += "/" + values[1] + "/";
-				try {
-					getFile(outPath, prefix, values);
-				} catch (IOException e1) {
-					System.err.println("Cannot download dependency " + link);
-				}
+		}
+
+		private String getManagedDepedency(String name, HashMap<String, PomFile> pomFiles) {
+			String v = this.managedDependencies.get(name);
+			if (v != null)
+				return v;
+			if (this.parent != null) {
+				PomFile p = pomFiles.get(this.parent);
+				if (p != null)
+					return p.getManagedDepedency(name, pomFiles);
 			}
-			e = de + "</dependency>".length();
+			return null;
+		}
+
+		private String getPropertyValue(String name, HashMap<String, PomFile> pomFiles) {
+			String v = this.properties.get(name);
+			if (v != null)
+				return v;
+			if (this.parent != null) {
+				PomFile p = pomFiles.get(this.parent);
+				if (p != null)
+					return p.getPropertyValue(name, pomFiles);
+			}
+			return null;
 		}
 	}
 
-	private static HashMap<String, String> readVariableValue(String content) {
-		HashMap<String, String> varValue = new HashMap<>();
-		int s = 0;
-		while (true) {
-			s = content.indexOf('<', s);
-			if (s == -1)
-				break;
-			int e = content.indexOf('>', s);
-			String tag = content.substring(s+1, e);
-			if (tag.startsWith("/")) {
-				s = e + 1;
-				continue;
+	public static void getPomDependencies(File file, String outPath, HashMap<String, PomFile> pomFiles) {
+		Reader reader = null;
+		MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
+		Model model = null;
+		try {
+			reader = new FileReader(file);
+			try {
+				model = xpp3Reader.read(reader);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+				return;
+			} catch (XmlPullParserException e1) {
+				e1.printStackTrace();
+				return;
 			}
-			if (tag.startsWith("!--")) {
-				e = content.indexOf("-->", e);
-				if (e == -1)
-					return varValue;
-				s = e + 3;
-			} else if (tag.endsWith("/")) {
-				s = e + 1;
-			} else if (tag.contains(" ")) {
-				s = e;
-			} else {
-				s = e + 1;
-				e = content.indexOf("</" + tag + ">", s);
-				if (e == -1)
-					return varValue;
-				String value = content.substring(s, e);
-				if (!value.contains("<") && !value.contains(">")) {
-					varValue.put(tag, value);
-					s = e + tag.length() + 3;
+		} catch (FileNotFoundException e) {
+			return;
+		} finally {
+			if (reader != null)
+				try {
+					reader.close();
+				} catch (IOException e1) {
+					return;
 				}
-			}
 		}
-		return varValue;
+		PomFile pf = new PomFile(model.getId(), model.getParent() != null ? model.getParent().getId() : null,
+						model.getProperties(),
+						model.getDependencyManagement() != null ? model.getDependencyManagement().getDependencies() : null,
+						model.getRepositories(),
+						pomFiles);
+		pomFiles.put(pf.id, pf);
+		pf.getDependencies(model.getDependencies(), pomFiles, outPath);
 	}
 
 	private static void getFile(String outPath, String prefix, String[] values) throws IOException {
@@ -344,22 +419,6 @@ public class ClassPathUtil {
 		fos.getChannel().transferFrom(rbc, 0, Integer.MAX_VALUE);
 		fos.flush();
 		fos.close();
-	}
-
-	private static String[] read(String content, String[] keys) {
-		String[] values = new String[keys.length];
-		for (int i = 0; i < keys.length; i++) {
-			String ss = "<" + keys[i] + ">", es = "</" + keys[i] + ">";
-			int si = content.indexOf(ss) + ss.length();
-			int ei = content.indexOf(es);
-			if (ei == -1) {
-				if (i < 2)
-					return null;
-				values[i] = "null";
-			} else
-				values[i] = content.substring(si, ei).trim();
-		}
-		return values;
 	}
 
 }

@@ -300,7 +300,8 @@ public class ProjectSequencesGenerator {
 
 	private String[] getJarPaths() {
 		HashMap<String, File> jarFiles = new HashMap<>();
-		getJarFiles(new File(inPath), jarFiles);
+		HashMap<String, ClassPathUtil.PomFile> pomFiles = new HashMap<>();
+		getJarFiles(new File(inPath), jarFiles, pomFiles);
 		String[] paths = new String[jarFiles.size()];
 		int i = 0;
 		for (File file : jarFiles.values())
@@ -308,10 +309,17 @@ public class ProjectSequencesGenerator {
 		return paths;
 	}
 
-	private void getJarFiles(File file, HashMap<String, File> jarFiles) {
+	private void getJarFiles(File file, HashMap<String, File> jarFiles, HashMap<String, ClassPathUtil.PomFile> pomFiles) {
 		if (file.isDirectory()) {
-			for (File sub : file.listFiles())
-				getJarFiles(sub, jarFiles);
+			ArrayList<File> dirs = new ArrayList<>();
+			for (File sub : file.listFiles()) {
+				if (sub.isDirectory())
+					dirs.add(sub);
+				else
+					getJarFiles(sub, jarFiles, pomFiles);
+			}
+			for (File dir : dirs)
+				getJarFiles(dir, jarFiles, pomFiles);
 		} else if (file.getName().endsWith(".jar")) {
 			File f = jarFiles.get(file.getName());
 			if (f == null || file.lastModified() > f.lastModified())
@@ -319,7 +327,7 @@ public class ProjectSequencesGenerator {
 		} else if (file.getName().equals("build.gradle")) {
 			ClassPathUtil.getGradleDependencies(file, this.inPath + "/lib");
 		} else if (file.getName().equals("pom.xml")) {
-			ClassPathUtil.getPomDependencies(file, this.inPath + "/lib");
+			ClassPathUtil.getPomDependencies(file, this.inPath + "/lib", pomFiles);
 		}
 	}
 	
