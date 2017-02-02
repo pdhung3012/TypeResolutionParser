@@ -63,8 +63,8 @@ public class ProjectSequencesGenerator {
 //		return targetSequenceTokens;
 //	}
 
-	public void generateSequences(String outPath) {
-		generateSequences(true, null, outPath);
+	public int  generateSequences(String outPath) {
+		return generateSequences(true, null, outPath);
 	}
 
 	public int generateSequences(final boolean keepUnresolvables, final String lib, final String outPath) {
