@@ -11,9 +11,6 @@ import java.util.ArrayList;
 public class FileUtil {
 	public static String getFileContent(String fp){
         String strResult="";
-        Object obj="aaaa";
-        //obj.toString().substring(obj.toString().indexOf("/"); 
-
         try{
              strResult = new String(Files.readAllBytes(Paths.get(fp)));
         }catch(Exception ex){

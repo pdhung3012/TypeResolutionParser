@@ -33,7 +33,6 @@ public class CorpusGenerator {
 						if (index == -1)
 							index = line.length();
 						String name = line.substring(0, index);
-						try {
 							File outDir = new File(outPath + "/" + lib + "/" + name.replace('/', '_'));
 							System.out.println("Start " + lib + " project " + count + " " + name);
 							int n = 0;
@@ -46,15 +45,16 @@ public class CorpusGenerator {
 								ProjectSequencesGenerator psg = new ProjectSequencesGenerator(repoPath + "/" + name);
 								if (!outDir.exists())
 									outDir.mkdirs();
-								n = psg.generateSequences(keepUnresolvables, lib, outDir.getAbsolutePath());
+								try {
+									n = psg.generateSequences(keepUnresolvables, lib, outDir.getAbsolutePath());
+								} catch (Throwable t) {
+									System.err.println("Error in parsing " + lib + " project " + count + " " + name);
+									t.printStackTrace();
+								}
 								psg.generateAlignment();
 							}
 							numOfSequences += n;
 							System.out.println("Done " + lib + " project " + count + " " + name + " sequences " + n + " " + numOfSequences);
-						} catch (Throwable t) {
-							System.err.println("Error in parsing " + lib + " project " + count + " " + name);
-							t.printStackTrace();
-						}
 						if (count > 200 || numOfSequences > 1000000)
 							break;
 					}
