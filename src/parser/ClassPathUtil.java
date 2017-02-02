@@ -56,9 +56,16 @@ public class ClassPathUtil {
 				}
 			} else {
 				if (inDependencies) {
-					if (line.startsWith("compile ") || line.startsWith("testCompile ") || line.startsWith("classpath ")) {
-						index = line.indexOf(' ');
-						line = line.substring(index).trim();
+					if (line.startsWith("compile ") || line.startsWith("testCompile ") || line.startsWith("classpath ") || line.startsWith("[group")) {
+						if (line.startsWith("[group")) {
+							index = line.indexOf(']');
+							if (index == -1)
+								continue;
+							line = line.substring(1, index);
+						} else {
+							index = line.indexOf(' ');
+							line = line.substring(index).trim();
+						}
 						int vi = 0;
 						while (true) {
 							vi = line.indexOf('+', vi);
@@ -128,7 +135,7 @@ public class ClassPathUtil {
 								try {
 									getFile(outPath, prefix, values);
 								} catch (IOException e1) {
-									System.err.println("Cannot download dependency " + link);
+//									System.err.println("Cannot download gradle dependency " + link);
 								}
 							}
 						}
@@ -178,7 +185,9 @@ public class ClassPathUtil {
 				v = v.substring(v.indexOf(':') + 1).trim();
 				values[i] = v;
 			}
-		} else if (!Character.isLetter(ch))
+		} else if (line.length() < 2)
+			return null;
+		else if (!Character.isLetter(ch))
 			return getGradleDependencyInfo(line.substring(1, line.length()-1).trim());
 		return values;
 	}
@@ -188,9 +197,12 @@ public class ClassPathUtil {
 		static HashMap<String, String> globalProperties = new HashMap<>(), globalManagedDependencies = new HashMap<>();
 		
 		private String id, parent;
-		private String[] repoLinks;
 		HashMap<String, String> properties = new HashMap<>();
 		HashMap<String, String> managedDependencies = new HashMap<>();
+		
+		static {
+			globalRepoLinks.add("http://central.maven.org/maven2/");
+		}
 		
 		public PomFile(String id, String parent, Properties properties, List<Dependency> managedDependencies, List<Repository> repos, HashMap<String, PomFile> pomFiles) {
 			this.id = id;
@@ -220,9 +232,7 @@ public class ClassPathUtil {
 					globalManagedDependencies.put(d.getGroupId() + ":" + d.getArtifactId(), v);
 				}
 			if (repos != null) {
-				repoLinks = new String[repos.size()];
 				for (int i = 0; i < repos.size(); i++) {
-					this.repoLinks[i] = repos.get(i).getUrl();
 					globalRepoLinks.add(repos.get(i).getUrl());
 				}
 			}
@@ -263,9 +273,7 @@ public class ClassPathUtil {
 				values = strip(values);
 				values[2] = values[2].replace('+', '0');
 				String name = values[1] + "-" + values[2] + ".jar";
-				String[] repoLinks = globalRepoLinks.toArray(new String[globalRepoLinks.size() + 1]);
-				repoLinks[repoLinks.length-1] = "http://central.maven.org/maven2/";
-				for (String link : repoLinks) {
+				for (String link : globalRepoLinks) {
 					link += values[0].replace('.', '/');
 					link += "/" + values[1];
 					link += "/" + values[2];
@@ -284,7 +292,7 @@ public class ClassPathUtil {
 						getFile(outPath, prefix, values);
 						break;
 					} catch (IOException e1) {
-						System.err.println("Cannot download dependency " + values[0] + ":" + values[1] + ":" + values[2]);
+//						System.err.println("Cannot download pom dependency " + values[0] + ":" + values[1] + ":" + values[2]);
 					}
 				}
 			}
@@ -324,10 +332,10 @@ public class ClassPathUtil {
 			try {
 				model = xpp3Reader.read(reader);
 			} catch (IOException e1) {
-				e1.printStackTrace();
+//				e1.printStackTrace();
 				return;
 			} catch (XmlPullParserException e1) {
-				e1.printStackTrace();
+//				e1.printStackTrace();
 				return;
 			}
 		} catch (FileNotFoundException e) {
