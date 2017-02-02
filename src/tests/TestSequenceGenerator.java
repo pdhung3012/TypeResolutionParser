@@ -39,7 +39,7 @@ public class TestSequenceGenerator {
 //		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("resources", true);
 //		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("T:/repos/lucene-solr", true);
 //		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("F:/github/repos-IntelliJ/JetBrains/intellij-community", true);
-		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("G:/github/repos-5stars-50commits/geosolutions-it/geoserver-enterprise", true);
+		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("G:/github/repos-5stars-50commits/apache/camel", true);
 		psg.generateSequences("T:/temp/statType/test");
 //		psg.updateTokens();
 		psg.generateAlignment();

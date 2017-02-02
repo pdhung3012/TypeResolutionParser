@@ -207,9 +207,11 @@ public class ClassPathUtil {
 		public PomFile(String id, String parent, Properties properties, List<Dependency> managedDependencies, List<Repository> repos, HashMap<String, PomFile> pomFiles) {
 			this.id = id;
 			this.parent = parent;
-			for (Entry<Object, Object> e : properties.entrySet()) {
-				this.properties.put(e.getKey().toString(), e.getValue().toString());
-				globalProperties.put(e.getKey().toString(), e.getValue().toString());
+			if (properties != null) {
+				for (Entry<Object, Object> e : properties.entrySet()) {
+					this.properties.put(e.getKey().toString(), e.getValue().toString());
+					globalProperties.put(e.getKey().toString(), e.getValue().toString());
+				}
 			}
 			if (managedDependencies != null)
 				for (Dependency d : managedDependencies) {
