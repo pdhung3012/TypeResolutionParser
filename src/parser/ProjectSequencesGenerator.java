@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Stack;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
@@ -21,6 +22,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import parser.ClassPathUtil.PomFile;
 import utils.FileUtil;
 
 public class ProjectSequencesGenerator {
@@ -79,7 +81,8 @@ public class ProjectSequencesGenerator {
 			stTargetSequences = new PrintStream(new FileOutputStream(outPath + "/target.txt"));
 			stLog = new PrintStream(new FileOutputStream(outPath + "/log.txt"));
 		} catch (FileNotFoundException e) {
-			System.err.println(e.getMessage());
+			if (testing)
+				System.err.println(e.getMessage());
 			return 0;
 		}
 		int numOfSequences = 0;
@@ -98,7 +101,14 @@ public class ProjectSequencesGenerator {
 			parser.setBindingsRecovery(false);
 			
 			StatTypeFileASTRequestor r = new StatTypeFileASTRequestor(keepUnresolvables, lib);
-			parser.createASTs(sourcePaths, null, new String[0], r, null);
+			try {
+				parser.createASTs(sourcePaths, null, new String[0], r, null);
+			} catch (Throwable t) {
+				if (testing) {
+					System.err.println(t.getMessage());
+					t.printStackTrace();
+				}
+			}
 			numOfSequences += r.numOfSequences;
 		}
 		return numOfSequences;
@@ -138,7 +148,7 @@ public class ProjectSequencesGenerator {
 			for (int i = 0; i < ast.types().size(); i++) {
 				if (ast.types().get(i) instanceof TypeDeclaration) {
 					TypeDeclaration td = (TypeDeclaration) ast.types().get(i);
-					numOfSequences += generateSequence(keepUnresolvables, lib, td, sourceFilePath, "");
+					numOfSequences += generateSequence(keepUnresolvables, lib, td, sourceFilePath, ast.getPackage().getName().getFullyQualifiedName(), "");
 				}
 			}
 		}
@@ -206,7 +216,7 @@ public class ProjectSequencesGenerator {
 		}
 	}
 
-	private int generateSequence(boolean keepUnresolvables, String lib, TypeDeclaration td, String path, String outer) {
+	private int generateSequence(boolean keepUnresolvables, String lib, TypeDeclaration td, String path, String packageName, String outer) {
 		int numOfSequences = 0;
 		String name = outer.isEmpty() ? td.getName().getIdentifier() : outer + "." + td.getName().getIdentifier();
 		String className = td.getName().getIdentifier(), superClassName = null;
@@ -238,7 +248,7 @@ public class ProjectSequencesGenerator {
 //					this.targetSequences.add(target);
 //					this.sourceSequenceTokens.add(sTokens);
 //					this.targetSequenceTokens.add(tTokens);
-					stLocations.print(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%" + "\n");
+					stLocations.print(path + "\t" + packageName + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%" + "\n");
 					stSourceSequences.print(source + "\n");
 					stTargetSequences.print(target + "\n");
 					numOfSequences++;
@@ -257,7 +267,7 @@ public class ProjectSequencesGenerator {
 			}
 		}
 		for (TypeDeclaration inner : td.getTypes())
-			numOfSequences += generateSequence(keepUnresolvables, lib, inner, path, name);
+			numOfSequences += generateSequence(keepUnresolvables, lib, inner, path, packageName, name);
 		return numOfSequences;
 	}
 
@@ -300,8 +310,12 @@ public class ProjectSequencesGenerator {
 
 	private String[] getJarPaths() {
 		HashMap<String, File> jarFiles = new HashMap<>();
-		HashMap<String, ClassPathUtil.PomFile> pomFiles = new HashMap<>();
-		getJarFiles(new File(inPath), jarFiles, pomFiles);
+		HashSet<String> globalRepoLinks = new HashSet<>();
+		globalRepoLinks.add("http://central.maven.org/maven2/");
+		HashMap<String, String> globalProperties = new HashMap<>();
+		HashMap<String, String> globalManagedDependencies = new HashMap<>();
+		Stack<ClassPathUtil.PomFile> parentPomFiles = new Stack<>();
+		getJarFiles(new File(inPath), jarFiles, globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
 		String[] paths = new String[jarFiles.size()];
 		int i = 0;
 		for (File file : jarFiles.values())
@@ -309,17 +323,22 @@ public class ProjectSequencesGenerator {
 		return paths;
 	}
 
-	private void getJarFiles(File file, HashMap<String, File> jarFiles, HashMap<String, ClassPathUtil.PomFile> pomFiles) {
+	private void getJarFiles(File file, HashMap<String, File> jarFiles, 
+			HashSet<String> globalRepoLinks, HashMap<String, String> globalProperties, HashMap<String, String> globalManagedDependencies,
+			Stack<PomFile> parentPomFiles) {
 		if (file.isDirectory()) {
+			int size = parentPomFiles.size();
 			ArrayList<File> dirs = new ArrayList<>();
 			for (File sub : file.listFiles()) {
 				if (sub.isDirectory())
 					dirs.add(sub);
 				else
-					getJarFiles(sub, jarFiles, pomFiles);
+					getJarFiles(sub, jarFiles, globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
 			}
 			for (File dir : dirs)
-				getJarFiles(dir, jarFiles, pomFiles);
+				getJarFiles(dir, jarFiles, globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
+			if (parentPomFiles.size() > size)
+				parentPomFiles.pop();
 		} else if (file.getName().endsWith(".jar")) {
 			File f = jarFiles.get(file.getName());
 			if (f == null || file.lastModified() > f.lastModified())
@@ -327,7 +346,7 @@ public class ProjectSequencesGenerator {
 		} else if (file.getName().equals("build.gradle")) {
 			ClassPathUtil.getGradleDependencies(file, this.inPath + "/lib");
 		} else if (file.getName().equals("pom.xml")) {
-			ClassPathUtil.getPomDependencies(file, this.inPath + "/lib", pomFiles);
+			ClassPathUtil.getPomDependencies(file, this.inPath + "/lib", globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
 		}
 	}
 	

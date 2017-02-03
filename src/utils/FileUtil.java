@@ -59,12 +59,12 @@ public class FileUtil {
              try {
                  bf = new BufferedWriter(new FileWriter(new File(fp), true), 32768);
                  bf.write(line);
-
              } catch (IOException ex) {
                  ex.printStackTrace();
              } finally {
                  try {
-                     bf.close();
+                     if (bf != null)
+                    	 bf.close();
                  } catch (IOException ex) {
                      ex.printStackTrace();
                  }
@@ -81,7 +81,8 @@ public class FileUtil {
                  ex.printStackTrace();
              } finally {
                  try {
-                     bf.close();
+                     if (bf != null)
+                    	 bf.close();
                  } catch (IOException ex) {
                      ex.printStackTrace();
                  }
@@ -109,7 +110,8 @@ public class FileUtil {
                         ex.printStackTrace();
                     } finally {
                         try {
-                            bf.close();
+                            if (bf != null)
+                           	 bf.close();
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }

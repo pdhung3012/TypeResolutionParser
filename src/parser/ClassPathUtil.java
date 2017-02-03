@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.Stack;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
@@ -112,6 +113,14 @@ public class ClassPathUtil {
 							}
 							values[i] = v;
 						}
+						if (values.length == 2)
+							values = new String[]{values[0], values[1], "null"};
+						if (values[0] == null || values[0].contains("$") || values[0].contains("@")
+								|| values[1] == null || values[1].contains("$") || values[1].contains("@") 
+								|| values[2] == null || values[2].contains("$") || values[2].contains("@")) {
+//							System.err.println("Cannot download gradle dependency " + values[0] + ":" + values[1] + ":" + values[2]);
+							continue;
+						}
 						values = strip(values);
 						for (int i = 0; i < values.length; i++) {
 							String v = values[i];
@@ -193,20 +202,18 @@ public class ClassPathUtil {
 	}
 	
 	static class PomFile {
-		static HashSet<String> globalRepoLinks = new HashSet<>();
-		static HashMap<String, String> globalProperties = new HashMap<>(), globalManagedDependencies = new HashMap<>();
-		
-		private String id, parent;
+		private String id;
+		private PomFile parent;
 		HashMap<String, String> properties = new HashMap<>();
 		HashMap<String, String> managedDependencies = new HashMap<>();
 		
-		static {
-			globalRepoLinks.add("http://central.maven.org/maven2/");
-		}
-		
-		public PomFile(String id, String parent, Properties properties, List<Dependency> managedDependencies, List<Repository> repos, HashMap<String, PomFile> pomFiles) {
+		public PomFile(String id, String parent, 
+				Properties properties, List<Dependency> managedDependencies, List<Repository> repos,
+				HashSet<String> globalRepoLinks, HashMap<String, String> globalProperties, HashMap<String, String> globalManagedDependencies,
+				Stack<PomFile> parentPomFiles) {
 			this.id = id;
-			this.parent = parent;
+			if (!parentPomFiles.isEmpty())
+				this.parent = parentPomFiles.peek();
 			if (properties != null) {
 				for (Entry<Object, Object> e : properties.entrySet()) {
 					this.properties.put(e.getKey().toString(), e.getValue().toString());
@@ -220,7 +227,7 @@ public class ClassPathUtil {
 						v = v.substring(1);
 						if (v.startsWith("{") && v.endsWith("}"))
 							v = v.substring(1, v.length()-1).trim();
-						v = getPropertyValue(v, pomFiles);
+						v = getPropertyValue(v);
 						if (v != null) {
 							if (v.startsWith("[")) {
 								v = v.substring(1, v.length() - 1);
@@ -240,18 +247,21 @@ public class ClassPathUtil {
 			}
 		}
 
-		public void getDependencies(List<Dependency> dependencies, HashMap<String, PomFile> pomFiles, String outPath) {
+		public void getDependencies(List<Dependency> dependencies, 
+				HashSet<String> globalRepoLinks, HashMap<String, String> globalProperties, HashMap<String, String> globalManagedDependencies,
+				String outPath) {
 			for (Dependency dep : dependencies) {
 				String[] values = new String[]{dep.getGroupId(), dep.getArtifactId(), dep.getVersion()};
 				for (int i = 0; i < values.length; i++) {
 					String v = values[i];
-					if (v != null) {
+					if (v != null && !v.isEmpty()) {
 						v = v.trim();
-						if (v.startsWith("$")) {
+						char ch = v.charAt(0);
+						if (ch =='$' || ch == '@') {
 							v = v.substring(1);
 							if (v.startsWith("{") && v.endsWith("}"))
 								v = v.substring(1, v.length()-1).trim();
-							String val = getPropertyValue(v, pomFiles);
+							String val = getPropertyValue(v);
 							if (val == null)
 								v = globalProperties.get(v);
 							if (v != null) {
@@ -265,12 +275,18 @@ public class ClassPathUtil {
 							}
 						}
 					} else if (i == 2) {
-						v = getManagedDepedency(values[0] + ":" + values[1], pomFiles);
+						v = getManagedDepedency(values[0] + ":" + values[1]);
 						if (v == null)
 							v = globalManagedDependencies.get(values[0] + ":" + values[1]);
 						if (v != null)
 							values[i] = v;
 					}
+				}
+				if (values[0] == null || values[0].contains("$") || values[0].contains("@")
+						|| values[1] == null || values[1].contains("$") || values[1].contains("@") 
+						|| values[2] == null || values[2].contains("$") || values[2].contains("@")) {
+//					System.err.println("Cannot download pom dependency " + values[0] + ":" + values[1] + ":" + values[2]);
+					continue;
 				}
 				values = strip(values);
 				values[2] = values[2].replace('+', '0');
@@ -300,32 +316,35 @@ public class ClassPathUtil {
 			}
 		}
 
-		private String getManagedDepedency(String name, HashMap<String, PomFile> pomFiles) {
+		private String getManagedDepedency(String name) {
 			String v = this.managedDependencies.get(name);
 			if (v != null)
 				return v;
 			if (this.parent != null) {
-				PomFile p = pomFiles.get(this.parent);
-				if (p != null)
-					return p.getManagedDepedency(name, pomFiles);
+				return this.parent.getManagedDepedency(name);
 			}
 			return null;
 		}
 
-		private String getPropertyValue(String name, HashMap<String, PomFile> pomFiles) {
+		private String getPropertyValue(String name) {
 			String v = this.properties.get(name);
 			if (v != null)
 				return v;
 			if (this.parent != null) {
-				PomFile p = pomFiles.get(this.parent);
-				if (p != null)
-					return p.getPropertyValue(name, pomFiles);
+				return this.parent.getPropertyValue(name);
 			}
 			return null;
 		}
+		
+		@Override
+		public String toString() {
+			return this.id;
+		}
 	}
 
-	public static void getPomDependencies(File file, String outPath, HashMap<String, PomFile> pomFiles) {
+	public static void getPomDependencies(File file, String outPath,
+			HashSet<String> globalRepoLinks, HashMap<String, String> globalProperties, HashMap<String, String> globalManagedDependencies,
+			Stack<PomFile> parentPomFiles) {
 		Reader reader = null;
 		MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
 		Model model = null;
@@ -354,9 +373,10 @@ public class ClassPathUtil {
 						model.getProperties(),
 						model.getDependencyManagement() != null ? model.getDependencyManagement().getDependencies() : null,
 						model.getRepositories(),
-						pomFiles);
-		pomFiles.put(pf.id, pf);
-		pf.getDependencies(model.getDependencies(), pomFiles, outPath);
+						globalRepoLinks, globalProperties, globalManagedDependencies,
+						parentPomFiles);
+		parentPomFiles.push(pf);
+		pf.getDependencies(model.getDependencies(), globalRepoLinks, globalProperties, globalManagedDependencies, outPath);
 	}
 
 	private static void getFile(String outPath, String prefix, String[] values) throws IOException {

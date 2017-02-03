@@ -42,7 +42,7 @@ public class CorpusGenerator {
 									if (locations.charAt(i) == '\n')
 										n++;
 							} else {
-								ProjectSequencesGenerator psg = new ProjectSequencesGenerator(repoPath + "/" + name);
+								ProjectSequencesGenerator psg = new ProjectSequencesGenerator(repoPath + "/" + name, false);
 								if (!outDir.exists())
 									outDir.mkdirs();
 								try {
