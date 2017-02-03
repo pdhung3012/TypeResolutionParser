@@ -6,14 +6,14 @@ import utils.FileUtil;
 
 public class EvaluateInOutPrecisionRecall {
 
-	static String fop_input="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output100K\\reordered\\";
+	static String fop_input="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170130\\sovProjects\\";
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		String fn_trainSource="train.s";
 		String fn_trainTarget="train.t";
 		String fn_testSource="test.s";
 		String fn_testTarget="test.t";
-		String fn_testTranslation="correct.trans";
+		String fn_testTranslation="test.tune.baseline.trans";
 		String fn_result="result.txt";
 		String fn_log_incorrect="log_incorrect.txt";
 		
@@ -32,12 +32,12 @@ public class EvaluateInOutPrecisionRecall {
 		
 		HashSet<Integer> lstNotReorderedLine=new HashSet<Integer>();
 		
-		for(int i=0;i<arrEvaluatedTypes.length;i++){
-			String[] arrItems=arrEvaluatedTypes[i].split("\t");
-			if(arrItems[1].equals("true")){
-				lstNotReorderedLine.add(i+1);
-			}
-		}
+//		for(int i=0;i<arrEvaluatedTypes.length;i++){
+//			String[] arrItems=arrEvaluatedTypes[i].split("\t");
+//			if(arrItems[1].equals("true")){
+//				lstNotReorderedLine.add(i+1);
+//			}
+//		}
 		
 		
 		for(int i=0;i<arrTrainSource.length;i++){
@@ -63,9 +63,9 @@ public class EvaluateInOutPrecisionRecall {
 		FileUtil.writeToFile(fop_input+fn_log_incorrect, "");
 		
 		for(int i=0;i<arrTestSource.length;i++){
-			if(!lstNotReorderedLine.contains(i+1)){
-				continue;
-			}
+//			if(!lstNotReorderedLine.contains(i+1)){
+//				continue;
+//			}
 			String[] itemSource=arrTestSource[i].trim().split("\\s+");
 			String[] itemTarget=arrTestTarget[i].trim().split("\\s+");
 			String[] itemTrans=arrTestTranslation[i].trim().split("\\s+");

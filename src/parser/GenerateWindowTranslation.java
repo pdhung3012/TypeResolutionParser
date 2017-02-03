@@ -8,17 +8,16 @@ import utils.FileUtil;
 public class GenerateWindowTranslation {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		String fop_input="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\outputUpdate\\";
+		String fop_input="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output100K\\reordered\\";
 		String[] arrFilesSource=FileUtil.getFileContent(fop_input+"test.s").trim().split("\n");
 		String[] arrFilesTarget=FileUtil.getFileContent(fop_input+"test.t").trim().split("\n");
 		int windowSize=6;
 		
 		String fn_testFilterSource="test_reorder.s",fn_testFilterTarget="test_reorder.t",fn_line="test_order_line.txt";
 		
-		HashSet<Integer> lstReorderedLine=new HashSet<Integer>(); 
-		lstReorderedLine.add(152);
-		lstReorderedLine.add(167);
-		lstReorderedLine.add(185);
+		HashSet<Integer> lstReorderedLine=new HashSet<Integer>();
+		
+			
 		
 		FileUtil.writeToFile(fop_input+fn_testFilterSource, "");
 		FileUtil.writeToFile(fop_input+fn_testFilterTarget, "");

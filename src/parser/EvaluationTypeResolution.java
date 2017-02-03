@@ -8,7 +8,7 @@ public class EvaluationTypeResolution {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		String fop_dirTranslate="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\";
+		String fop_dirTranslate="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170130\\sovProjects\\";
 		String fn_test="test.t";
 		
 		//check length
