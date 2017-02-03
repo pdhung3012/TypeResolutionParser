@@ -14,18 +14,11 @@ public class FileUtil {
 	public static String getFileContent(String fp){
         String strResult="";
         try{
-        	try (BufferedReader br = new BufferedReader(new FileReader(fp))) {
-        	    String line;
-        	    while ((line = br.readLine()) != null) {
-        	       // process the line.
-        	    	strResult+=line+"\n";
-        	    }
-        	}
-             //strResult = new String(Files.readAllBytes(Paths.get(fp)));
+             strResult = new String(Files.readAllBytes(Paths.get(fp)));
         }catch(Exception ex){
           //  ex.printStackTrace();
         }
-        return strResult.trim();
+        return strResult;
     
 	}
 	
@@ -39,16 +32,12 @@ public class FileUtil {
         	    	//strResult+=line+"\n";
         	    	if(!line.trim().isEmpty()){
         	    		lstResults.add(line.trim());
-        	    		
         	    	}
-        	    	
         	    }
         	}
-             //strResult = new String(Files.readAllBytes(Paths.get(fp)));
         }catch(Exception ex){
           //  ex.printStackTrace();
         }
-        System.out.println("end");
         return lstResults;
     
 	}
