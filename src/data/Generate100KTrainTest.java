@@ -215,12 +215,12 @@ public class Generate100KTrainTest {
 		}
 		
 		for(int i=0;i<arrLstFiles.length;i++){
-			String[] arrSource = FileUtil.getFileContent(fop_output+arrLstFiles[i].getName()+".source.txt").trim().split("\n");
-			String[] arrTarget = FileUtil.getFileContent(fop_output+arrLstFiles[i].getName()+".target.txt").trim().split("\n");
-			String[] arrLocation = FileUtil.getFileContent(fop_output+arrLstFiles[i].getName()+".location.txt").trim().split("\n");
-			String[] arrTrainSt = FileUtil.getFileContent(fop_output+arrLstFiles[i].getName()+".training.s-t.A3").trim().split("\n");
-			String[] arrTrainTs = FileUtil.getFileContent(fop_output+arrLstFiles[i].getName()+".training.t-s.A3").trim().split("\n");
-			int lengthOfPairs=arrSource.length;
+			ArrayList<String> arrSource = FileUtil.getFileStringArray(fop_output+arrLstFiles[i].getName()+".source.txt");
+			ArrayList<String> arrTarget = FileUtil.getFileStringArray(fop_output+arrLstFiles[i].getName()+".target.txt");
+			ArrayList<String> arrLocation = FileUtil.getFileStringArray(fop_output+arrLstFiles[i].getName()+".location.txt");
+			ArrayList<String> arrTrainSt = FileUtil.getFileStringArray(fop_output+arrLstFiles[i].getName()+".training.s-t.A3");
+			ArrayList<String> arrTrainTs = FileUtil.getFileStringArray(fop_output+arrLstFiles[i].getName()+".training.t-s.A3");
+			int lengthOfPairs=arrSource.size();
 			
 			int numberForTestInLib=lengthOfPairs/10;
 			int numberForTuneInLib=lengthOfPairs/10;
@@ -229,7 +229,7 @@ public class Generate100KTrainTest {
 			//create hash set to store all possible test line after each fold;
 			//from fold 1 to fold 10, the list will be reduced
 			ArrayList<Integer> listPossibleTestPerEachFold=new ArrayList<Integer>();
-			for(int j=0;j<arrSource.length;j++){
+			for(int j=0;j<arrSource.size();j++){
 				listPossibleTestPerEachFold.add(j);
 			}
 			
@@ -263,28 +263,28 @@ public class Generate100KTrainTest {
 					indexForTune++;
 				}
 				
-				for(int j=0;j<arrSource.length;j++){
+				for(int j=0;j<arrSource.size();j++){
 					if(setTestPerFold.contains(j)){
-						arrPrtTestSource[indexFold-1].print(arrSource[j]+"\n");
-						arrPrtTestTarget[indexFold-1].print(arrTarget[j]+"\n");
-						arrPrtTestLocation[indexFold-1].print(arrLocation[j]+"\n");
+						arrPrtTestSource[indexFold-1].print(arrSource.get(j)+"\n");
+						arrPrtTestTarget[indexFold-1].print(arrTarget.get(j)+"\n");
+						arrPrtTestLocation[indexFold-1].print(arrLocation.get(j)+"\n");
 						arrPrtTestLine[indexFold-1].print((j+1)+"\t"+arrLstFiles[i].getName()+"\n");
 						
 					} else{
-						arrPrtTrainSource[indexFold-1].print(arrSource[j]+"\n");
-						arrPrtTrainTarget[indexFold-1].print(arrTarget[j]+"\n");
-						arrPrtTrainLocation[indexFold-1].print(arrLocation[j]+"\n");
+						arrPrtTrainSource[indexFold-1].print(arrSource.get(j)+"\n");
+						arrPrtTrainTarget[indexFold-1].print(arrTarget.get(j)+"\n");
+						arrPrtTrainLocation[indexFold-1].print(arrLocation.get(j)+"\n");
 						arrPrtTrainLine[indexFold-1].print((j+1)+"\t"+arrLstFiles[i].getName()+"\n");
-						arrPrtTrainAlignS2T[indexFold-1].print( arrTrainSt[j*3]+"\n");
-						arrPrtTrainAlignS2T[indexFold-1].print( arrTrainSt[j*3+1]+"\n");
-						arrPrtTrainAlignS2T[indexFold-1].print( arrTrainSt[j*3+2]+"\n");						
-						arrPrtTrainAlignT2S[indexFold-1].print(  arrTrainTs[j*3]+"\n");
-						arrPrtTrainAlignT2S[indexFold-1].print( arrTrainTs[j*3+1]+"\n");
-						arrPrtTrainAlignT2S[indexFold-1].print( arrTrainTs[j*3+2]+"\n");
+						arrPrtTrainAlignS2T[indexFold-1].print( arrTrainSt.get(j*3)+"\n");
+						arrPrtTrainAlignS2T[indexFold-1].print( arrTrainSt.get(j*3+1)+"\n");
+						arrPrtTrainAlignS2T[indexFold-1].print( arrTrainSt.get(j*3+2)+"\n");						
+						arrPrtTrainAlignT2S[indexFold-1].print(  arrTrainTs.get(j*3)+"\n");
+						arrPrtTrainAlignT2S[indexFold-1].print( arrTrainTs.get(j*3+1)+"\n");
+						arrPrtTrainAlignT2S[indexFold-1].print( arrTrainTs.get(j*3+2)+"\n");
 						if(setTunePerFold.contains(j)){
-							arrPrtTuneSource[indexFold-1].print(arrSource[j]+"\n");
-							arrPrtTuneTarget[indexFold-1].print(arrTarget[j]+"\n");
-							arrPrtTuneLocation[indexFold-1].print(arrLocation[j]+"\n");
+							arrPrtTuneSource[indexFold-1].print(arrSource.get(j)+"\n");
+							arrPrtTuneTarget[indexFold-1].print(arrTarget.get(j)+"\n");
+							arrPrtTuneLocation[indexFold-1].print(arrLocation.get(j)+"\n");
 							arrPrtTuneLine[indexFold-1].print((j+1)+"\t"+arrLstFiles[i].getName()+"\n");
 						}
 						
