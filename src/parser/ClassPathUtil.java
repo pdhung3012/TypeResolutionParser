@@ -113,8 +113,10 @@ public class ClassPathUtil {
 							}
 							values[i] = v;
 						}
+						if (values.length == 2)
+							values = new String[]{values[0], values[1], "null"};
 						if (values[0] == null || values[0].contains("$") || values[0].contains("@")
-								|| values[1] == null || values[1].contains("$") || values[2].contains("@") 
+								|| values[1] == null || values[1].contains("$") || values[1].contains("@") 
 								|| values[2] == null || values[2].contains("$") || values[2].contains("@")) {
 //							System.err.println("Cannot download gradle dependency " + values[0] + ":" + values[1] + ":" + values[2]);
 							continue;
@@ -281,7 +283,7 @@ public class ClassPathUtil {
 					}
 				}
 				if (values[0] == null || values[0].contains("$") || values[0].contains("@")
-						|| values[1] == null || values[1].contains("$") || values[2].contains("@") 
+						|| values[1] == null || values[1].contains("$") || values[1].contains("@") 
 						|| values[2] == null || values[2].contains("$") || values[2].contains("@")) {
 //					System.err.println("Cannot download pom dependency " + values[0] + ":" + values[1] + ":" + values[2]);
 					continue;
