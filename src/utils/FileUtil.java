@@ -30,7 +30,6 @@ public class FileUtil {
 	}
 	
 	public static ArrayList<String> getFileStringArray(String fp){
-        String strResult="";
         ArrayList<String> lstResults=new ArrayList<String>();
         try{
         	try (BufferedReader br = new BufferedReader(new FileReader(fp))) {
