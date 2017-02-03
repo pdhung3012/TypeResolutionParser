@@ -138,7 +138,7 @@ public class ProjectSequencesGenerator {
 			for (int i = 0; i < ast.types().size(); i++) {
 				if (ast.types().get(i) instanceof TypeDeclaration) {
 					TypeDeclaration td = (TypeDeclaration) ast.types().get(i);
-					numOfSequences += generateSequence(keepUnresolvables, lib, td, sourceFilePath, "");
+					numOfSequences += generateSequence(keepUnresolvables, lib, td, sourceFilePath, ast.getPackage().getName().getFullyQualifiedName(), "");
 				}
 			}
 		}
@@ -206,7 +206,7 @@ public class ProjectSequencesGenerator {
 		}
 	}
 
-	private int generateSequence(boolean keepUnresolvables, String lib, TypeDeclaration td, String path, String outer) {
+	private int generateSequence(boolean keepUnresolvables, String lib, TypeDeclaration td, String path, String packageName, String outer) {
 		int numOfSequences = 0;
 		String name = outer.isEmpty() ? td.getName().getIdentifier() : outer + "." + td.getName().getIdentifier();
 		String className = td.getName().getIdentifier(), superClassName = null;
@@ -238,7 +238,7 @@ public class ProjectSequencesGenerator {
 //					this.targetSequences.add(target);
 //					this.sourceSequenceTokens.add(sTokens);
 //					this.targetSequenceTokens.add(tTokens);
-					stLocations.print(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%" + "\n");
+					stLocations.print(path + "\t" + packageName + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%" + "\n");
 					stSourceSequences.print(source + "\n");
 					stTargetSequences.print(target + "\n");
 					numOfSequences++;
@@ -257,7 +257,7 @@ public class ProjectSequencesGenerator {
 			}
 		}
 		for (TypeDeclaration inner : td.getTypes())
-			numOfSequences += generateSequence(keepUnresolvables, lib, inner, path, name);
+			numOfSequences += generateSequence(keepUnresolvables, lib, inner, path, packageName, name);
 		return numOfSequences;
 	}
 
