@@ -351,6 +351,10 @@ public class ProjectSequencesGenerator {
 	}
 	
 	public void generateAlignment() {
+		generateAlignment(outPath);
+	}
+	
+	public static void generateAlignment(String outPath) {
 		ArrayList<String> sourceSequences = readSource(outPath + "/source.txt"), targetSequences = readSource(outPath + "/target.txt");
 		StringBuilder sbS2T = new StringBuilder(), sbT2S = new StringBuilder();
 		for (int i = 0; i < sourceSequences.size(); i++) {
@@ -372,8 +376,7 @@ public class ProjectSequencesGenerator {
 		FileUtil.writeToFile(dir.getAbsolutePath() + "/training.t-s.A3", sbT2S.toString());
 	}
 	
-	private String generateAlignment(String[] tokens) {
-		//NULL ({  }) FOMElement ({ 1 }) .getTextElement ({ 2 }) QName ({ 3 })
+	private static String generateAlignment(String[] tokens) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("NULL ({  })");
 		for (int i = 0; i < tokens.length; i++) {
@@ -383,12 +386,12 @@ public class ProjectSequencesGenerator {
 		return sb.toString();
 	}
 
-	private String generateHeader(String[] sTokens, String[] tTokens, int i) {
+	private static String generateHeader(String[] sTokens, String[] tTokens, int i) {
 		return "# sentence pair (" + i + ") source length " + sTokens.length + " target length " + tTokens.length + " alignment score : 0";
 	}
 
 
-	private ArrayList<String> readSource(String path) {
+	private static ArrayList<String> readSource(String path) {
 		ArrayList<String> sequences = new ArrayList<>();
 		String sources = FileUtil.getFileContent(path);
 		Scanner sc = new Scanner(sources);
