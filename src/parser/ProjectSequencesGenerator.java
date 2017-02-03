@@ -79,7 +79,8 @@ public class ProjectSequencesGenerator {
 			stTargetSequences = new PrintStream(new FileOutputStream(outPath + "/target.txt"));
 			stLog = new PrintStream(new FileOutputStream(outPath + "/log.txt"));
 		} catch (FileNotFoundException e) {
-			System.err.println(e.getMessage());
+			if (testing)
+				System.err.println(e.getMessage());
 			return 0;
 		}
 		int numOfSequences = 0;
@@ -98,7 +99,14 @@ public class ProjectSequencesGenerator {
 			parser.setBindingsRecovery(false);
 			
 			StatTypeFileASTRequestor r = new StatTypeFileASTRequestor(keepUnresolvables, lib);
-			parser.createASTs(sourcePaths, null, new String[0], r, null);
+			try {
+				parser.createASTs(sourcePaths, null, new String[0], r, null);
+			} catch (Throwable t) {
+				if (testing) {
+					System.err.println(t.getMessage());
+					t.printStackTrace();
+				}
+			}
 			numOfSequences += r.numOfSequences;
 		}
 		return numOfSequences;
