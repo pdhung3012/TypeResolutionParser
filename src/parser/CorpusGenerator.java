@@ -9,9 +9,12 @@ public class CorpusGenerator {
 	private String repoPath;
 	
 	public static void main(String[] args) {
+		long start = System.currentTimeMillis();
 		String[] libs = new String[]{"android.", "com.google.gwt.", "org.hibernate.", "org.joda.time.", "com.thoughtworks.xstream."};
 		CorpusGenerator cg = new CorpusGenerator("G:/github/repos-5stars-50commits");
 		cg.generateSequences("T:/github", false, libs, "T:/type-sequences");
+		long end = System.currentTimeMillis();
+		System.out.println("Finish parsing corpus in " + (end - start) / 1000);
 	}
 
 	public CorpusGenerator(String repoPath) {
