@@ -51,7 +51,7 @@ public class CorpusGenerator {
 									System.err.println("Error in parsing " + lib + " project " + count + " " + name);
 									t.printStackTrace();
 								}
-								psg.generateAlignment();
+//								psg.generateAlignment();
 							}
 							numOfSequences += n;
 							System.out.println("Done " + lib + " project " + count + " " + name + " sequences " + n + " " + numOfSequences);
