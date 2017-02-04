@@ -345,7 +345,7 @@ public class SequenceGenerator extends ASTVisitor {
 		String name = "." + className + "()";
 		this.partialTokens.append(" " + name + " ");
 		if (tb != null)
-			name = tb.getQualifiedName() + name;
+			name = getQualifiedName(tb) + name;
 		this.fullTokens.append(" " + name + " ");
 		for (int i = 0; i < node.arguments().size(); i++)
 			((ASTNode) node.arguments().get(i)).accept(this);
@@ -421,7 +421,7 @@ public class SequenceGenerator extends ASTVisitor {
 		this.partialTokens.append(" " + name + " ");
 		if (b != null) {
 			if (tb != null)
-				name = tb.getTypeDeclaration().getQualifiedName() + name;
+				name = getQualifiedName(tb.getTypeDeclaration()) + name;
 			/*else
 				name = "Array" + name;*/
 		}
@@ -513,8 +513,8 @@ public class SequenceGenerator extends ASTVisitor {
 				node.getExpression().accept(this);
 			} else {
 				if (tb != null) {
-					this.partialTokens.append(" " + tb.getName() + " ");
-					this.fullTokens.append(" " + tb.getQualifiedName() + " ");
+					this.partialTokens.append(" " + getName(tb) + " ");
+					this.fullTokens.append(" " + getQualifiedName(tb) + " ");
 				} else {
 					this.partialTokens.append(" this ");
 					this.fullTokens.append(" this ");
@@ -530,7 +530,7 @@ public class SequenceGenerator extends ASTVisitor {
 //					&& !name.equals(".hashCode()")
 //					&& !name.equals(".valueOf()")
 					)
-				name = tb.getQualifiedName() + name;
+				name = getQualifiedName(tb) + name;
 			this.fullTokens.append(" " + name + " ");
 		}
 		for (int i = 0; i < node.arguments().size(); i++)
@@ -601,7 +601,7 @@ public class SequenceGenerator extends ASTVisitor {
 				if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 					return false;
 				this.partialTokens.append(" " + node.getFullyQualifiedName() + " ");
-				this.fullTokens.append(" " + tb.getQualifiedName() + " ");
+				this.fullTokens.append(" " + getQualifiedName(tb) + " ");
 				return false;
 			}
 		} else {
@@ -615,7 +615,7 @@ public class SequenceGenerator extends ASTVisitor {
 		if (b != null) {
 			if (b instanceof IVariableBinding) {
 				if (tb != null)
-					name = tb.getTypeDeclaration().getQualifiedName() + name;
+					name = getQualifiedName(tb.getTypeDeclaration()) + name;
 				/*else
 					name = "Array" + name;*/
 			}
@@ -640,16 +640,16 @@ public class SequenceGenerator extends ASTVisitor {
 					tb = tb.getTypeDeclaration();
 					if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 						return false;
-					this.fullTokens.append(" " + tb.getQualifiedName() + " ");
-					this.partialTokens.append(" " + tb.getName() + " ");
+					this.fullTokens.append(" " + getQualifiedName(tb) + " ");
+					this.partialTokens.append(" " + getName(tb) + " ");
 				}
 			} else if (b instanceof ITypeBinding) {
 				ITypeBinding tb = (ITypeBinding) b;
 				tb = tb.getTypeDeclaration();
 				if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 					return false;
-				this.fullTokens.append(" " + tb.getQualifiedName() + " ");
-				this.partialTokens.append(" " + tb.getName() + " ");
+				this.fullTokens.append(" " + getQualifiedName(tb) + " ");
+				this.partialTokens.append(" " + getName(tb) + " ");
 			}
 		} else {
 			this.fullTokens.append(" " + node.getIdentifier() + " ");
@@ -699,7 +699,7 @@ public class SequenceGenerator extends ASTVisitor {
 		String name = "." + superClassName + "()";
 		this.partialTokens.append(" " + name + " ");
 		if (tb != null)
-			name = tb.getQualifiedName() + name;
+			name = getQualifiedName(tb) + name;
 		this.fullTokens.append(" " + name + " ");
 		for (int i = 0; i < node.arguments().size(); i++)
 			((ASTNode) node.arguments().get(i)).accept(this);
@@ -714,8 +714,8 @@ public class SequenceGenerator extends ASTVisitor {
 			tb = b.getDeclaringClass().getTypeDeclaration();
 			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
-			this.partialTokens.append(" " + tb.getName() + " ");
-			this.fullTokens.append(" " + tb.getQualifiedName() + " ");
+			this.partialTokens.append(" " + getName(tb) + " ");
+			this.fullTokens.append(" " + getQualifiedName(tb) + " ");
 		} else {
 			this.partialTokens.append(" super ");
 			this.fullTokens.append(" super ");
@@ -723,7 +723,7 @@ public class SequenceGenerator extends ASTVisitor {
 		String name = "." + node.getName().getIdentifier();
 		this.partialTokens.append(" " + name + " ");
 		if (tb != null)
-			name = tb.getQualifiedName() + name;
+			name = getQualifiedName(tb) + name;
 		this.fullTokens.append(" " + name + " ");
 		return false;
 	}
@@ -737,13 +737,13 @@ public class SequenceGenerator extends ASTVisitor {
 		if (tb != null) {
 			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
-			this.partialTokens.append(" " + tb.getName() + " ");
-			this.fullTokens.append(" " + tb.getQualifiedName() + " ");
+			this.partialTokens.append(" " + getName(tb) + " ");
+			this.fullTokens.append(" " + getQualifiedName(tb) + " ");
 		} else {
 			this.partialTokens.append(" super ");
 			this.fullTokens.append(" super ");
 		}
-		String name = "."+ node.getName().getIdentifier() + "()";
+		String name = "." + node.getName().getIdentifier() + "()";
 		this.partialTokens.append(" " + name + " ");
 		if (!USE_SIMPLE_METHOD_NAME && tb != null 
 //				&& !name.equals(".toString()") 
@@ -753,7 +753,7 @@ public class SequenceGenerator extends ASTVisitor {
 //				&& !name.equals(".hashCode()")
 //				&& !name.equals(".valueOf()")
 				)
-			name = tb.getQualifiedName() + name;
+			name = getQualifiedName(tb) + name;
 		this.fullTokens.append(" " + name + " ");
 		for (int i = 0; i < node.arguments().size(); i++)
 			((ASTNode) node.arguments().get(i)).accept(this);
@@ -787,8 +787,8 @@ public class SequenceGenerator extends ASTVisitor {
 			b = b.getTypeDeclaration();
 			if (b.isLocal() || b.getQualifiedName().isEmpty())
 				return false;
-			this.partialTokens.append(" " + b.getName() + " ");
-			this.fullTokens.append(" " + b.getQualifiedName() + " ");
+			this.partialTokens.append(" " + getName(b) + " ");
+			this.fullTokens.append(" " + getQualifiedName(b) + " ");
 		} else {
 			this.partialTokens.append(" this ");
 			this.fullTokens.append(" this ");
@@ -922,6 +922,18 @@ public class SequenceGenerator extends ASTVisitor {
 	@Override
 	public boolean visit(WildcardType node) {
 		return false;
+	}
+
+	private String getQualifiedName(ITypeBinding tb) {
+		if (tb.isArray())
+			return getQualifiedName(tb.getComponentType().getTypeDeclaration()) + getDimensions(tb.getDimensions());
+		return tb.getQualifiedName();
+	}
+
+	private String getName(ITypeBinding tb) {
+		if (tb.isArray())
+			return getName(tb.getComponentType().getTypeDeclaration()) + getDimensions(tb.getDimensions());
+		return tb.getName();
 	}
 
 }
