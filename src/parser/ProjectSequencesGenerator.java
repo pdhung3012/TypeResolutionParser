@@ -353,13 +353,14 @@ public class ProjectSequencesGenerator {
 	public int[] generateAlignment(boolean doVerify) {
 		return generateAlignment(outPath, doVerify);
 	}
+	
 	/**
 	 * 
 	 * @param inPath
 	 * @param doVerify
-	 * @return 	numbers[0]: 0-same number of sequences, 1-different numbers of sequences
-	 * 			numbers[1]: number of sequences with different lengths
-	 * 			numbers[2]: number of sequences with non-aligned tokens
+	 * @return 	numbers[0]: 0-same number of sequences, 1-different numbers of sequences;
+	 * 			numbers[1]: number of sequences with different lengths;
+	 * 			numbers[2]: number of sequences with non-aligned tokens;
 	 * 			numbers[3]: number of non-aligned tokens 
 	 */
 	public static int[] generateAlignment(String inPath, boolean doVerify) {
