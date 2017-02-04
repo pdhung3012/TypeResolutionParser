@@ -408,7 +408,7 @@ public class ProjectSequencesGenerator {
 				boolean aligned = true;
 				for (int j = 0; j < sTokens.length; j++) {
 					String s = sTokens[j], t = tTokens[j];
-					if ((t.contains(".") && !t.endsWith(s)) || (!t.contains(".") && !t.equals(s))) {
+					if ((t.contains(".") && !t.substring(t.lastIndexOf('.')+1).equals(s.substring(s.lastIndexOf('.')+1))) || (!t.contains(".") && !t.equals(s))) {
 						numbers[3]++;
 						aligned = false;
 //						throw new AssertionError("Source and target are not aligned!!!");
