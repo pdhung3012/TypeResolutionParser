@@ -41,6 +41,27 @@ public class FileUtil {
         return lstResults;
     
 	}
+	
+	public static int countNumberOfLines(String fp) {
+		int count = 0;
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(fp));
+    	    String line;
+    	    while ((line = br.readLine()) != null) {
+    	    	if(!line.trim().isEmpty())
+    	    		count++;
+    	    }
+    	    return count;
+    	} catch (IOException e) {
+    		return -1;
+    	} finally {
+    		if (br != null)
+				try {
+					br.close();
+				} catch (IOException e) {}
+    	}
+	}
     
 	 public static void appendToFile(String fp,String line){
          BufferedWriter bf=null;
