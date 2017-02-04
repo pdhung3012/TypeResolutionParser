@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Stack;
 
 import org.eclipse.jdt.core.JavaCore;
@@ -349,6 +348,16 @@ public class ProjectSequencesGenerator {
 			ClassPathUtil.getPomDependencies(file, this.inPath + "/lib", globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
 		}
 	}
+	
+	/**
+	 * 
+	 * @param inPath
+	 * @param doVerify
+	 * @return 	numbers[0]: 0-same number of sequences, 1-different numbers of sequences;
+	 * 			numbers[1]: number of sequences with different lengths;
+	 * 			numbers[2]: number of sequences with non-aligned tokens;
+	 * 			numbers[3]: number of non-aligned tokens 
+	 */
 	
 	public int[] generateAlignment(boolean doVerify) {
 		return generateAlignment(outPath, doVerify);
