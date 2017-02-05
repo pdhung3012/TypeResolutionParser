@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import parser.ProjectSequencesGenerator;
 import utils.FileUtil;
 
 
@@ -33,13 +34,9 @@ public class Generate100KTrainTest {
 //		String fop_logProject="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\log_extractData\\";
 //		String fop_logProgram="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\log_program\\";
 		String fop_sequenceInput="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\5 libs live API\\type-sequences\\";
-		String fop_output="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_filterLength\\";
+		String fop_output="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_100K5Libs\\";
 		
-//		map5LibrariesCount.put("org.joda.time", 0);
-//		map5LibrariesCount.put("android", 0);
-//		map5LibrariesCount.put("gwt",0);
-//		map5LibrariesCount.put("xstream", 0);
-//		map5LibrariesCount.put("hibernate", 0);
+		//ProjectSequencesGenerator psg=new ProjectSequencesGenerator(fop_output); 
 		
 		File dirRepo=new File(fop_sequenceInput);
 		
@@ -56,8 +53,16 @@ public class Generate100KTrainTest {
 		
 		
 		HashSet<String> setMethodInfo=new HashSet<String>();
-		int numberOfMethods=0;
+		int numberOfMethodsTotal=0;
+		
+		HashMap<String,Integer> mapPercentagePerLibrary=new HashMap<String, Integer>();
+		mapPercentagePerLibrary.put("android", 23750);
+		mapPercentagePerLibrary.put("com.google.gwt", 23750);
+		mapPercentagePerLibrary.put("com.thoughtworks.xstream", 5000);
+		mapPercentagePerLibrary.put("org.hibernate", 23750);
+		mapPercentagePerLibrary.put("org.joda.time", 23750);
 
+		
 		for(int i=0;i<arrLstFiles.length;i++){
 			
 			try {
@@ -78,7 +83,7 @@ public class Generate100KTrainTest {
 			//String fn_libName=arrLstFiles[i].getName();
 			File[] arrProjects=arrLstFiles[i].listFiles();
 			//String[] arrLibName=fn_libName.split("\\.");
-			
+			int numberMethodNeedPerLibrary=mapPercentagePerLibrary.get(arrLstFiles[i].getName()),indexMethodPerLibrary=0;
 			for(int j=0;j<arrProjects.length;j++){
 				//System.out.println(arrProjects[j].getAbsolutePath());
 				
@@ -87,6 +92,12 @@ public class Generate100KTrainTest {
 					continue;
 				}
 				System.out.println(projName);
+				ProjectSequencesGenerator psg=new ProjectSequencesGenerator(arrProjects[j].getAbsolutePath());
+				int[] result=psg.generateAlignment(true);
+				if(result[0]!=0){
+					System.out.println("Project "+arrProjects[j].getName()+" not same length");
+					continue;
+				}
 				//String projName=arrProjects[j].split("\t")[0].replace("/", "_");
 //				if(existProjects.contains(projName)){
 //					continue;
@@ -138,14 +149,18 @@ public class Generate100KTrainTest {
 					//arrTokenInTarget.length<=255&&
 					if(arrTokenInTarget.length<=25&& percentResolve.equals("100%")&&!setMethodInfo.contains(signaturePerMethod)){
 						//add to corpus
-						System.out.println(arrTokenInTarget.length);
+					//	System.out.println(arrTokenInTarget.length);
 						setMethodInfo.add(signaturePerMethod);
 						//if(k*3<arrAlignST.length){
 							//setMethodInfo.add(arrLocation[k]);
-							numberOfMethods++;
+							numberOfMethodsTotal++;
+							indexMethodPerLibrary++;
 							stSource.print(arrSource[k]+"\n");
 							stTarget.print(arrTarget[k]+"\n");
 							stLocation.print( arrLocation[k]+"\n");
+							
+							
+							
 							stTrainSt.print(  arrAlignST[k*3]+"\n");
 							stTrainSt.print( arrAlignST[k*3+1]+"\n");
 							stTrainSt.print( arrAlignST[k*3+2]+"\n");						
@@ -158,15 +173,16 @@ public class Generate100KTrainTest {
 					}
 				}
 				//FileUtil.appendToFile(fop_logProgram+"log_projects.txt",  fn_libName+"\t"+projName+"\t"+numberOfMethods+"\n");
-//				if(indexMethodRequired>numberMethodsRequired){
-//					break;
-//				}
+				if(indexMethodPerLibrary>=numberMethodNeedPerLibrary){
+					System.out.println("library "+arrLstFiles[i].getName()+" has "+numberMethodNeedPerLibrary+" methods in "+(j+1)+" project");
+					break;
+				}
 			
 			}
 			
 		}
 		
-		System.out.println("Finish combine corpus! "+numberOfMethods+" in corpus");
+		System.out.println("Finish combine corpus! "+numberOfMethodsTotal+" in corpus");
 		System.out.println("Start created 10 fold");
 	//	System.out.println("Start created 10 fold");
 		

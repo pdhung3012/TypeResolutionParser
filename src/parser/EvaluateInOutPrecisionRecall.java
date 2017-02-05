@@ -9,7 +9,7 @@ import utils.FileUtil;
 
 public class EvaluateInOutPrecisionRecall {
 
-	static String fop_input="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_stackoverflow\\";
+	static String fop_input="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_600K\\fold-1\\";
 	
 	public static boolean checkAPIsInLibrary(HashSet<String> setLib,String token){
 		boolean check=false;
@@ -30,8 +30,10 @@ public class EvaluateInOutPrecisionRecall {
 		String fn_testSource="test.s";
 		String fn_testTarget="test.t";
 		String fn_testTranslation="test.tune.baseline.trans";
-		String fn_result="result.txt";
+		String fn_result="result_all.txt";
 		String fn_log_incorrect="log_incorrect.txt";
+		String fn_log_outVocab="log_outVocab.txt";
+		String fn_correctOrderTranslated="correctOrderTranslatedResult.txt";
 		
 		ArrayList<String> arrTrainSource=FileUtil.getFileStringArray(fop_input+fn_trainSource);
 		ArrayList<String> arrTestSource=FileUtil.getFileStringArray(fop_input+fn_testSource);
@@ -50,8 +52,8 @@ public class EvaluateInOutPrecisionRecall {
 		set5Libraries.add("org.hibernate.");
 		set5Libraries.add("org.joda.time.");
 		
-		set5Libraries.add("org.apache.");
-		set5Libraries.add("java.");
+//		set5Libraries.add("org.apache.");
+//		set5Libraries.add("java.");
 		
 		
 		
@@ -104,24 +106,59 @@ public class EvaluateInOutPrecisionRecall {
 		FileUtil.writeToFile(fop_input+fn_result, "Correct"+"\t"+"Incorrect"+"\t"+"Out_of_source"+"\t"+"Out_of_target"+"\t"+"Out_of_vocab"+"\n");
 		FileUtil.writeToFile(fop_input+fn_log_incorrect, "");
 		
-		PrintStream ptResult=null,ptIncorrect=null;
+		PrintStream ptResult=null,ptIncorrect=null,ptOutVocab=null,ptCorrectTranslated=null;
 		try{
 			ptResult=new PrintStream(new FileOutputStream(fop_input+fn_result));
 			ptIncorrect=new PrintStream(new FileOutputStream(fop_input+fn_log_incorrect));
+			ptCorrectTranslated=new PrintStream(new FileOutputStream(fop_input+fn_correctOrderTranslated));
+			ptOutVocab=new PrintStream(new FileOutputStream(fop_input+fn_log_outVocab));
 			
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
 		
 		for(int i=0;i<arrTestSource.size();i++){
-			if(!lstNotReorderedLine.contains(i+1)){
-				continue;
-			}
+//			if(!lstNotReorderedLine.contains(i+1)){
+//				continue;
+//			}
 			HashSet<String> setIncorrect=new HashSet<String>();
+			HashSet<String> setOutSource=new HashSet<String>();
+			HashSet<String> setOutTarget=new HashSet<String>();
 			String[] itemSource=arrTestSource.get(i).trim().split("\\s+");
 			String[] itemTarget=arrTestTarget.get(i).trim().split("\\s+");
 			String[] itemTrans=arrTestTranslation.get(i).trim().split("\\s+");
-			String strIncorrectLog="";
+			String strIncorrectLog="",strOutSource="",strOutTarget="";
+			
+			//String[] itemCorrectOrderTrans=itemTrans;
+			int indexAbNormalSource=0,indexAbNormalTranslation=0;
+			String strCorrectSequence="";
+			for(int j=0;j<itemSource.length;j++){
+				indexAbNormalSource=j;
+				indexAbNormalTranslation=j;
+				String[] transTokenSplitByDot=itemTrans[j].split("\\.");
+				String lastWordOfTarget=transTokenSplitByDot[transTokenSplitByDot.length-1];
+				String[] arrInTokenS=itemSource[j].split("\\.");
+				String lastWordOfSource=arrInTokenS[arrInTokenS.length-1];
+				if(lastWordOfTarget.equals(lastWordOfSource)){
+					
+				} else{
+					for(int q=indexAbNormalTranslation;q<itemTrans.length;q++){
+						String[] q_transTokenSplitByDot=itemTrans[q].split("\\.");
+						String q_lastWordOfTranslated=q_transTokenSplitByDot[q_transTokenSplitByDot.length-1];
+						if(q_lastWordOfTranslated.equals(lastWordOfSource)){
+							//swap position
+							String temp=itemTrans[q];
+							itemTrans[q]=itemTrans[indexAbNormalTranslation];
+							itemTrans[indexAbNormalTranslation]=temp;
+							break;
+						} 
+					}
+				}
+				strCorrectSequence+=itemTrans[j]+" ";
+			}
+			
+			ptCorrectTranslated.print(strCorrectSequence+"\n");
+			
 			
 			int numCSourceLine=0,numCTargetLine=0,numIncorrect=0,numCorrect=0;
 			System.out.println("Line "+i);
@@ -131,9 +168,18 @@ public class EvaluateInOutPrecisionRecall {
 				if(checkAPIsInLibrary(set5Libraries, itemTarget[j])){
 				if(!setVocabTrainSource.contains(itemSource[j])){
 						numCSourceLine++;
+						if(!setOutSource.contains(itemSource[j])){
+							strOutSource+=itemSource[j]+" ";
+							setOutSource.add(itemSource[j]);
+						}
+						
 					}
 					else if(!setVocabTrainTarget.contains(itemTarget[j])){
 						numCTargetLine++;
+						if(!setOutTarget.contains(itemTarget[j])){
+							strOutTarget+=itemTarget[j]+" ";
+							setOutTarget.add(itemTarget[j]);
+						}
 					}else if(itemTarget[j].equals(itemTrans[j])){
 						numCorrect++;
 					} else{
@@ -153,7 +199,8 @@ public class EvaluateInOutPrecisionRecall {
 			countOutOfTarget+=numCTargetLine;
 			countAllOutOfVocab+=numCSourceLine+numCTargetLine;
 			ptResult.print("Line "+(i+1)+" (correct/incorrect/OOS/OOT/OOV): "+numCorrect+"\t"+numIncorrect+"\t"+numCSourceLine+"\t"+numCTargetLine+"\t"+(numCSourceLine+numCTargetLine)+"\n");
-			ptIncorrect.print("Line "+(i+1)+" (correct/incorrect/OOS/OOT/OOV): "+strIncorrectLog+"\n");
+			ptIncorrect.print("Line "+(i+1)+" : "+strIncorrectLog+"\n");
+			ptOutVocab.print("Line "+(i+1)+" : "+strOutSource.trim()+" ||| "+strOutTarget.trim()+"\n");
 			//FileUtil.appendToFile(fop_input+fn_result, numCorrect+"\t"+numIncorrect+"\t"+numCSourceLine+"\t"+numCTargetLine+"\t"+(numCSourceLine+numCTargetLine)+"\n");
 	//		FileUtil.appendToFile(fop_input+fn_log_incorrect, strIncorrectLog+"\n");
 			
@@ -162,13 +209,16 @@ public class EvaluateInOutPrecisionRecall {
 		try{
 			ptResult.close();
 			ptIncorrect.close();
+			ptCorrectTranslated.close();
+			ptOutVocab.close();
+			
 		}catch(Exception ex){
 			
 		}
 		
 		FileUtil.appendToFile(fop_input+fn_result, countCorrect+"\t"+countIncorrect+"\t"+countOutOfSource+"\t"+countOutOfTarget+"\t"+countAllOutOfVocab+"\n");
-//		FileUtil.appendToFile(fop_input+fn_result, "Precision in-vocab: "+countCorrect*1.0/(countCorrect+countIncorrect)+"\n");
-//		FileUtil.appendToFile(fop_input+fn_result, "Recall out-vocab: "+countCorrect*1.0/(countCorrect+countIncorrect+countAllOutOfVocab)+"\n");
+		FileUtil.appendToFile(fop_input+fn_result, "Precision in-vocab: "+countCorrect*1.0/(countCorrect+countIncorrect)+"\n");
+		FileUtil.appendToFile(fop_input+fn_result, "Recall out-vocab: "+countCorrect*1.0/(countCorrect+countIncorrect+countAllOutOfVocab)+"\n");
 		
 		
 	}
