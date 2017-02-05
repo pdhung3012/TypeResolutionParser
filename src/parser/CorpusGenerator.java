@@ -62,7 +62,7 @@ public class CorpusGenerator {
 							}
 							numOfSequences += n;
 							System.out.println("Done " + lib + " project " + count + " " + name + " sequences " + n + " " + numOfSequences);
-						if (count > 50)
+						if (count >= 200)
 							break;
 					}
 					sc.close();
