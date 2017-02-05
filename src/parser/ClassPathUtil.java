@@ -223,6 +223,8 @@ public class ClassPathUtil {
 			if (managedDependencies != null)
 				for (Dependency d : managedDependencies) {
 					String v = d.getVersion();
+					if (v == null || v.isEmpty())
+						continue;
 					if (v.startsWith("$")) {
 						v = v.substring(1);
 						if (v.startsWith("{") && v.endsWith("}"))
@@ -242,7 +244,9 @@ public class ClassPathUtil {
 				}
 			if (repos != null) {
 				for (int i = 0; i < repos.size(); i++) {
-					globalRepoLinks.add(repos.get(i).getUrl());
+					String url = repos.get(i).getUrl();
+					if (url != null && !url.isEmpty())
+						globalRepoLinks.add(url);
 				}
 			}
 		}
