@@ -77,7 +77,7 @@ public class ExtractCodeSequenceFrom5Lib {
 									}
 									int n = psg.generateSequences(folder.getAbsolutePath()+"\\");
 									//psg.generateSequences("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_5libSequences\\VanirAOSP_frameworks_base\\");
-									psg.generateAlignment();
+								//	psg.generateAlignment();
 									FileUtil.appendToFile(fop_log+repoInfo+"_methodStatistics.txt",projectName+"\t"+n+"\n");
 									
 								}

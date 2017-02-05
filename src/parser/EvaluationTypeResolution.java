@@ -1,5 +1,7 @@
 package parser;
 
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.HashSet;
 
 import utils.FileUtil;
@@ -8,7 +10,7 @@ public class EvaluationTypeResolution {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		String fop_dirTranslate="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170130\\sovProjects\\";
+		String fop_dirTranslate="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_stackoverflow\\";
 		String fn_test="test.t";
 		
 		//check length
@@ -27,6 +29,14 @@ public class EvaluationTypeResolution {
 		String[] arrOracles=FileUtil.getFileContent(fop_dirTranslate+fn_test).trim().split("\n");
 		String[] arrTranslations=FileUtil.getFileContent(fop_dirTranslate+fn_translatedResult).trim().split("\n");
 	
+		PrintStream ptResult=null,ptTypeStructure=null;
+		try{
+			ptResult=new PrintStream(new FileOutputStream(fop_dirTranslate+fn_evaluatedResult));
+			ptTypeStructure=new PrintStream(new FileOutputStream(fop_dirTranslate+fn_typeStructureResults));
+			
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
 		
 		int countCorrectCSInSentence=0,countCorrectCLInSentence=0;
 		int countOfInCorrectPerSentence=0,countOfGoodPerSentence=0,countOfOutOfVocabPerSentence=0;
@@ -133,8 +143,10 @@ public class EvaluationTypeResolution {
 				countCorrectCSInSentence++;
 			}
 
-			FileUtil.appendToFile(fop_dirTranslate+fn_evaluatedResult, isCLInSentence+"\t"+isCSInSentence+"\t"+arrItemOracle.length+"\t"+arrItemTrans.length+"\n");
-			FileUtil.appendToFile(fop_dirTranslate+fn_typeStructureResults, numOfGoodPerSentence+"\t"+numOfInCorrectPerSentence+"\t"+numOfOutOfVocabPerSentence+"\n");
+			ptResult.print(isCLInSentence+"\t"+isCSInSentence+"\t"+arrItemOracle.length+"\t"+arrItemTrans.length+"\n");
+			ptTypeStructure.print(numOfGoodPerSentence+"\t"+numOfInCorrectPerSentence+"\t"+numOfOutOfVocabPerSentence+"\n");
+//			FileUtil.appendToFile(fop_dirTranslate+fn_evaluatedResult, isCLInSentence+"\t"+isCSInSentence+"\t"+arrItemOracle.length+"\t"+arrItemTrans.length+"\n");
+//			FileUtil.appendToFile(fop_dirTranslate+fn_typeStructureResults, numOfGoodPerSentence+"\t"+numOfInCorrectPerSentence+"\t"+numOfOutOfVocabPerSentence+"\n");
 			
 			//if(!isCSInSentence){
 				countOfGoodPerSentence+=numOfGoodPerSentence;
@@ -144,14 +156,22 @@ public class EvaluationTypeResolution {
 			//	FileUtil.appendToFile(fop_dirTranslate+"67_incorrect_source.txt",arrSource[i]+"\n");
 //				FileUtil.appendToFile(fop_dirTranslate+"67_incorrect_translated.txt",arrTranslations[i]+"\n");
 				
-				FileUtil.appendToFile(fop_dirTranslate+fn_OutOfVocab,strOutVocab+"\n");
-				FileUtil.appendToFile(fop_dirTranslate+fn_IncorrectTranslate, strIncorrect+"\n");
+//				FileUtil.appendToFile(fop_dirTranslate+fn_OutOfVocab,strOutVocab+"\n");
+//				FileUtil.appendToFile(fop_dirTranslate+fn_IncorrectTranslate, strIncorrect+"\n");
 			//}
 			
 			
 			
 			
 		}
+		
+		try{
+			ptResult.close();
+			ptTypeStructure.close();
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+		
 		FileUtil.appendToFile(fop_dirTranslate+fn_evaluatedResult, countCorrectCLInSentence+"/"+arrOracles.length+"\t"+countCorrectCSInSentence+"/"+arrOracles.length+"\n");
 		FileUtil.appendToFile(fop_dirTranslate+fn_typeStructureResults, countOfGoodPerSentence+"\t"+countOfInCorrectPerSentence+"\t"+countOfOutOfVocabPerSentence+"\n");
 
