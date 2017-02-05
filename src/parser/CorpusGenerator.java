@@ -14,7 +14,7 @@ public class CorpusGenerator {
 	
 	public static void main(String[] args) {
 		long start = System.currentTimeMillis();
-		String[] libs = new String[]{"android.", "com.google.gwt.", "org.hibernate.", "org.joda.time.", "com.thoughtworks.xstream."};
+		String[] libs = new String[]{"org.apache.commons.", "android.", "com.google.gwt.", "org.hibernate.", "org.joda.time.", "com.thoughtworks.xstream."};
 		CorpusGenerator cg = new CorpusGenerator("G:/github/repos-5stars-50commits");
 		cg.generateSequences("T:/github", false, libs, "T:/type-sequences");
 		long end = System.currentTimeMillis();
@@ -62,7 +62,7 @@ public class CorpusGenerator {
 							}
 							numOfSequences += n;
 							System.out.println("Done " + lib + " project " + count + " " + name + " sequences " + n + " " + numOfSequences);
-						if (count > 200 || numOfSequences > 1000000)
+						if (count > 50)
 							break;
 					}
 					sc.close();

@@ -29,9 +29,6 @@ public class ProjectSequencesGenerator {
 	
 	private String inPath, outPath;
 	private boolean testing = false;
-//	private ArrayList<String> locations = new ArrayList<>();
-//	private ArrayList<String> sourceSequences = new ArrayList<>(), targetSequences = new ArrayList<>();
-//	private ArrayList<String[]> sourceSequenceTokens = new ArrayList<>(), targetSequenceTokens = new ArrayList<>();
 	private PrintStream stLocations, stSourceSequences, stTargetSequences, stLog;
 	private HashSet<String> badFiles = new HashSet<>();
 	
@@ -43,26 +40,6 @@ public class ProjectSequencesGenerator {
 		this(inPath);
 		this.testing = testing;
 	}
-	
-//	public ArrayList<String> getLocations() {
-//		return locations;
-//	}
-//
-//	public ArrayList<String> getSourceSequences() {
-//		return sourceSequences;
-//	}
-//
-//	public ArrayList<String> getTargetSequences() {
-//		return targetSequences;
-//	}
-//
-//	public ArrayList<String[]> getSourceSequenceTokens() {
-//		return sourceSequenceTokens;
-//	}
-//
-//	public ArrayList<String[]> getTargetSequenceTokens() {
-//		return targetSequenceTokens;
-//	}
 
 	public int  generateSequences(String outPath) {
 		return generateSequences(true, null, outPath);
@@ -103,6 +80,7 @@ public class ProjectSequencesGenerator {
 			try {
 				parser.createASTs(sourcePaths, null, new String[0], r, null);
 			} catch (Throwable t) {
+				t.printStackTrace(stLog);
 				if (testing) {
 					System.err.println(t.getMessage());
 					t.printStackTrace();
@@ -128,14 +106,16 @@ public class ProjectSequencesGenerator {
 			if (ast.getPackage() == null)
 				return;
 			if (lib != null) {
-				if (ast.imports() == null)
-					return;
 				boolean hasLib = false;
-				for (int i = 0; i < ast.imports().size(); i++) {
-					ImportDeclaration ic = (ImportDeclaration) ast.imports().get(i);
-					if (ic.getName().getFullyQualifiedName().startsWith(lib)) {
-						hasLib = true;
-						break;
+				if (ast.getPackage().getName().getFullyQualifiedName().startsWith(lib))
+					hasLib = true;
+				if (!hasLib && ast.imports() != null) {
+					for (int i = 0; i < ast.imports().size(); i++) {
+						ImportDeclaration ic = (ImportDeclaration) ast.imports().get(i);
+						if (ic.getName().getFullyQualifiedName().startsWith(lib)) {
+							hasLib = true;
+							break;
+						}
 					}
 				}
 				if (!hasLib)
@@ -408,7 +388,7 @@ public class ProjectSequencesGenerator {
 				boolean aligned = true;
 				for (int j = 0; j < sTokens.length; j++) {
 					String s = sTokens[j], t = tTokens[j];
-					if ((t.contains(".") && !t.endsWith(s)) || (!t.contains(".") && !t.equals(s))) {
+					if ((t.contains(".") && !t.substring(t.lastIndexOf('.')+1).equals(s.substring(s.lastIndexOf('.')+1))) || (!t.contains(".") && !t.equals(s))) {
 						numbers[3]++;
 						aligned = false;
 //						throw new AssertionError("Source and target are not aligned!!!");
