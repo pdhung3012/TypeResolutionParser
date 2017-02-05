@@ -136,7 +136,7 @@ public class Generate100KTrainTest {
 //						}
 //					}
 					//arrTokenInTarget.length<=255&&
-					if(arrTokenInTarget.length<=255&& percentResolve.equals("100%")&&!setMethodInfo.contains(signaturePerMethod)){
+					if(arrTokenInTarget.length<=25&& percentResolve.equals("100%")&&!setMethodInfo.contains(signaturePerMethod)){
 						//add to corpus
 						System.out.println(arrTokenInTarget.length);
 						setMethodInfo.add(signaturePerMethod);
