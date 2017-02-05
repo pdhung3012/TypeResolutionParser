@@ -323,9 +323,17 @@ public class ProjectSequencesGenerator {
 			if (f == null || file.lastModified() > f.lastModified())
 				jarFiles.put(file.getName(), file);
 		} else if (file.getName().equals("build.gradle")) {
-			ClassPathUtil.getGradleDependencies(file, this.inPath + "/lib");
+			try {
+				ClassPathUtil.getGradleDependencies(file, this.inPath + "/lib");
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
 		} else if (file.getName().equals("pom.xml")) {
-			ClassPathUtil.getPomDependencies(file, this.inPath + "/lib", globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
+			try {
+				ClassPathUtil.getPomDependencies(file, this.inPath + "/lib", globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
 		}
 	}
 	

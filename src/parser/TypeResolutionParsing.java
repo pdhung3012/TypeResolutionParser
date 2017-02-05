@@ -75,7 +75,7 @@ public class TypeResolutionParsing {
 					public void run() {
 						ProjectSequencesGenerator psg = new ProjectSequencesGenerator(path + "\\");
 						psg.generateSequences("C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output20170125\\");
-						psg.generateAlignment();
+						psg.generateAlignment(true);
 					}
 				});
 			} catch (Throwable ex){
