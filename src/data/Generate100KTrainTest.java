@@ -33,8 +33,8 @@ public class Generate100KTrainTest {
 		// TODO Auto-generated method 
 //		String fop_logProject="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\log_extractData\\";
 //		String fop_logProgram="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\log_program\\";
-		String fop_sequenceInput="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\5 libs live API\\type-sequences\\";
-		String fop_output="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_100K5Libs\\";
+		String fop_sequenceInput="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\6libs\\";
+		String fop_output="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_5libs_newApp\\";
 		
 		//ProjectSequencesGenerator psg=new ProjectSequencesGenerator(fop_output); 
 		
@@ -56,131 +56,131 @@ public class Generate100KTrainTest {
 		int numberOfMethodsTotal=0;
 		
 		HashMap<String,Integer> mapPercentagePerLibrary=new HashMap<String, Integer>();
-		mapPercentagePerLibrary.put("android", 23750);
-		mapPercentagePerLibrary.put("com.google.gwt", 23750);
-		mapPercentagePerLibrary.put("com.thoughtworks.xstream", 5000);
-		mapPercentagePerLibrary.put("org.hibernate", 23750);
-		mapPercentagePerLibrary.put("org.joda.time", 23750);
+//		mapPercentagePerLibrary.put("android", 23750);
+//		mapPercentagePerLibrary.put("com.google.gwt", 23750);
+//		mapPercentagePerLibrary.put("com.thoughtworks.xstream", 5000);
+//		mapPercentagePerLibrary.put("org.hibernate", 23750);
+//		mapPercentagePerLibrary.put("org.joda.time", 23750);
 
 		
-		for(int i=0;i<arrLstFiles.length;i++){
-			
-			try {
-				stSource = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".source.txt"));
-				stTarget = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".target.txt"));
-				stLocation = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".location.txt"));
-				stTrainSt = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".training.s-t.A3"));
-				stTrainTs = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".training.t-s.A3"));
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-			
-			System.out.println(arrLstFiles[i].getAbsolutePath());
-			//int numberMethodsRequired=20000;
-			
-			//int numberL1PerProject=0,numberL2PerProject=0,numberL3PerProject=0,numberL4PerProject=0,numberL5PerProject=0;
-			
-			//String fn_libName=arrLstFiles[i].getName();
-			File[] arrProjects=arrLstFiles[i].listFiles();
-			//String[] arrLibName=fn_libName.split("\\.");
-			int numberMethodNeedPerLibrary=mapPercentagePerLibrary.get(arrLstFiles[i].getName()),indexMethodPerLibrary=0;
-			for(int j=0;j<arrProjects.length;j++){
-				//System.out.println(arrProjects[j].getAbsolutePath());
-				
-				String projName=arrProjects[j].getName();
-				if(projName.endsWith("alignment")){
-					continue;
-				}
-				System.out.println(projName);
-				ProjectSequencesGenerator psg=new ProjectSequencesGenerator(arrProjects[j].getAbsolutePath());
-				int[] result=psg.generateAlignment(true);
-				if(result[0]!=0){
-					System.out.println("Project "+arrProjects[j].getName()+" not same length");
-					continue;
-				}
-				//String projName=arrProjects[j].split("\t")[0].replace("/", "_");
-//				if(existProjects.contains(projName)){
+//		for(int i=0;i<arrLstFiles.length;i++){
+//			
+//			try {
+//				stSource = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".source.txt"));
+//				stTarget = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".target.txt"));
+//				stLocation = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".location.txt"));
+//				stTrainSt = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".training.s-t.A3"));
+//				stTrainTs = new PrintStream(new FileOutputStream(fop_output+arrLstFiles[i].getName()+".training.t-s.A3"));
+//			} catch (FileNotFoundException e) {
+//				e.printStackTrace();
+//			}
+//			
+//			System.out.println("Lib "+arrLstFiles[i].getAbsolutePath());
+//			//int numberMethodsRequired=20000;
+//			
+//			//int numberL1PerProject=0,numberL2PerProject=0,numberL3PerProject=0,numberL4PerProject=0,numberL5PerProject=0;
+//			
+//			//String fn_libName=arrLstFiles[i].getName();
+//			File[] arrProjects=arrLstFiles[i].listFiles();
+//			//String[] arrLibName=fn_libName.split("\\.");
+//			int numberMethodNeedPerLibrary=0,indexMethodPerLibrary=0;
+//			for(int j=0;j<arrProjects.length;j++){
+//				//System.out.println(arrProjects[j].getAbsolutePath());
+//				
+//				String projName=arrProjects[j].getName();
+//				if(projName.endsWith("alignment")){
 //					continue;
-//				} else{
-//					existProjects.add(projName);
-//					
 //				}
-				
-				
-				
-				String fp_locations=arrProjects[j].getAbsolutePath()+"\\locations.txt";
-				String fp_source=arrProjects[j].getAbsolutePath()+"\\source.txt";
-				String fp_target=arrProjects[j].getAbsolutePath()+"\\target.txt";
-				String fp_alignmentST=arrProjects[j].getAbsolutePath()+"-alignment\\training.s-t.A3";
-				String fp_alignmentTS=arrProjects[j].getAbsolutePath()+"-alignment\\training.t-s.A3";
-				
-				String[] arrLocation=utils.FileUtil.getFileContent(fp_locations).split("\n");
-				String[] arrSource=utils.FileUtil.getFileContent(fp_source).split("\n");
-				String[] arrTarget=utils.FileUtil.getFileContent(fp_target).split("\n");
-				String[] arrAlignST=utils.FileUtil.getFileContent(fp_alignmentST).split("\n");
-				String[] arrAlignTS=utils.FileUtil.getFileContent(fp_alignmentTS).split("\n");
-				
-				if(arrAlignST.length==0){
-					continue;
-				}
-				
-				
-				
-				
-				for(int k=0;k<arrTarget.length;k++){
-					String[] arrLocationInfo=arrLocation[k].split("\t");
-					String[] arrTokenInTarget=arrTarget[k].trim().split("\\s+");
-					String signaturePerMethod="";
-					for(int q=0;q<arrLocationInfo.length-3;q++){
-						signaturePerMethod+=arrLocationInfo[q]+" ";
-					}
-					
-					signaturePerMethod=signaturePerMethod.trim();
-					String percentResolve=arrLocationInfo[arrLocationInfo.length-1];
-					//String[] arrTokenTarget=arrTarget[k].trim().split("\\s+");
-				//	System.out.println(percentResolve);
-//					boolean checkStartWithTokens=false;
-//					for(int q=0;q<arrTokenTarget.length;q++){
-//						if(arrTokenTarget[q].contains(fn_libName)){
-//							checkStartWithTokens=true;
-//							break;
-//						}
+//				System.out.println(arrProjects[j].getAbsolutePath());
+//				ProjectSequencesGenerator psg=new ProjectSequencesGenerator(arrProjects[j].getAbsolutePath()+"\\");
+//				int[] result=psg.generateAlignment(arrProjects[j].getAbsolutePath(),true);
+//				if(result[0]!=0){
+//					System.out.println("Project "+arrProjects[j].getName()+" not same length");
+//					continue;
+//				}
+//				//String projName=arrProjects[j].split("\t")[0].replace("/", "_");
+////				if(existProjects.contains(projName)){
+////					continue;
+////				} else{
+////					existProjects.add(projName);
+////					
+////				}
+//				
+//				
+//				
+//				String fp_locations=arrProjects[j].getAbsolutePath()+"\\locations.txt";
+//				String fp_source=arrProjects[j].getAbsolutePath()+"\\source.txt";
+//				String fp_target=arrProjects[j].getAbsolutePath()+"\\target.txt";
+//				String fp_alignmentST=arrProjects[j].getAbsolutePath()+"-alignment\\training.s-t.A3";
+//				String fp_alignmentTS=arrProjects[j].getAbsolutePath()+"-alignment\\training.t-s.A3";
+//				
+//				String[] arrLocation=utils.FileUtil.getFileContent(fp_locations).split("\n");
+//				String[] arrSource=utils.FileUtil.getFileContent(fp_source).split("\n");
+//				String[] arrTarget=utils.FileUtil.getFileContent(fp_target).split("\n");
+//				String[] arrAlignST=utils.FileUtil.getFileContent(fp_alignmentST).trim().split("\n");
+//				String[] arrAlignTS=utils.FileUtil.getFileContent(fp_alignmentTS).trim().split("\n");
+//				
+//				if(arrAlignST.length==0){
+//					continue;
+//				}
+//				
+//				
+//				
+//				
+//				for(int k=0;k<arrTarget.length;k++){
+//					String[] arrLocationInfo=arrLocation[k].split("\t");
+//					String[] arrTokenInTarget=arrTarget[k].trim().split("\\s+");
+//					String signaturePerMethod="";
+//					for(int q=0;q<arrLocationInfo.length-3;q++){
+//						signaturePerMethod+=arrLocationInfo[q]+" ";
 //					}
-					//arrTokenInTarget.length<=255&&
-					if(arrTokenInTarget.length<=25&& percentResolve.equals("100%")&&!setMethodInfo.contains(signaturePerMethod)){
-						//add to corpus
-					//	System.out.println(arrTokenInTarget.length);
-						setMethodInfo.add(signaturePerMethod);
-						//if(k*3<arrAlignST.length){
-							//setMethodInfo.add(arrLocation[k]);
-							numberOfMethodsTotal++;
-							indexMethodPerLibrary++;
-							stSource.print(arrSource[k]+"\n");
-							stTarget.print(arrTarget[k]+"\n");
-							stLocation.print( arrLocation[k]+"\n");
-							
-							
-							
-							stTrainSt.print(  arrAlignST[k*3]+"\n");
-							stTrainSt.print( arrAlignST[k*3+1]+"\n");
-							stTrainSt.print( arrAlignST[k*3+2]+"\n");						
-							stTrainTs.print(  arrAlignTS[k*3]+"\n");
-							stTrainTs.print( arrAlignTS[k*3+1]+"\n");
-							stTrainTs.print( arrAlignTS[k*3+2]+"\n");
-							
-						
-						
-					}
-				}
-				//FileUtil.appendToFile(fop_logProgram+"log_projects.txt",  fn_libName+"\t"+projName+"\t"+numberOfMethods+"\n");
-				if(indexMethodPerLibrary>=numberMethodNeedPerLibrary){
-					System.out.println("library "+arrLstFiles[i].getName()+" has "+numberMethodNeedPerLibrary+" methods in "+(j+1)+" project");
-					break;
-				}
-			
-			}
-			
-		}
+//					
+//					signaturePerMethod=signaturePerMethod.trim();
+//					String percentResolve=arrLocationInfo[arrLocationInfo.length-1];
+//					//String[] arrTokenTarget=arrTarget[k].trim().split("\\s+");
+//				//	System.out.println(percentResolve);
+////					boolean checkStartWithTokens=false;
+////					for(int q=0;q<arrTokenTarget.length;q++){
+////						if(arrTokenTarget[q].contains(fn_libName)){
+////							checkStartWithTokens=true;
+////							break;
+////						}
+////					}
+//					//arrTokenInTarget.length<=255&&
+//					if(arrTokenInTarget.length<=255&& percentResolve.equals("100%")&&!setMethodInfo.contains(signaturePerMethod)){
+//						//add to corpus
+//					//	System.out.println(arrAlignST[0]+"--"+arrSource.length);
+//						setMethodInfo.add(signaturePerMethod);
+//						//if(k*3<arrAlignST.length){
+//							//setMethodInfo.add(arrLocation[k]);
+//							numberOfMethodsTotal++;
+//							indexMethodPerLibrary++;
+//							stSource.print(arrSource[k]+"\n");
+//							stTarget.print(arrTarget[k]+"\n");
+//							stLocation.print( arrLocation[k]+"\n");
+//							
+//							
+//							
+//							stTrainSt.print(  arrAlignST[k*3]+"\n");
+//							stTrainSt.print( arrAlignST[k*3+1]+"\n");
+//							stTrainSt.print( arrAlignST[k*3+2]+"\n");						
+//							stTrainTs.print(  arrAlignTS[k*3]+"\n");
+//							stTrainTs.print( arrAlignTS[k*3+1]+"\n");
+//							stTrainTs.print( arrAlignTS[k*3+2]+"\n");
+//							
+//						
+//						
+//					}
+//				}
+//				//FileUtil.appendToFile(fop_logProgram+"log_projects.txt",  fn_libName+"\t"+projName+"\t"+numberOfMethods+"\n");
+////				if(indexMethodPerLibrary>=numberMethodNeedPerLibrary){
+////					System.out.println("library "+arrLstFiles[i].getName()+" has "+numberMethodNeedPerLibrary+" methods in "+(j+1)+" project");
+////					break;
+////				}
+//			
+//			}
+//			
+//		}
 		
 		System.out.println("Finish combine corpus! "+numberOfMethodsTotal+" in corpus");
 		System.out.println("Start created 10 fold");
@@ -234,7 +234,17 @@ public class Generate100KTrainTest {
 			}
 		}
 		
+		ArrayList<String> arrFold1TestLoc = FileUtil.getFileStringArray(fop_output+"\\fold-1\\test_old\\"+"test.locations.txt");
+		//create hash set to store all possible test line after each fold;
+		HashSet<String> setTestOld=new HashSet<String>();
+		for(int j=0;j<arrFold1TestLoc.size();j++){
+			setTestOld.add(arrFold1TestLoc.get(j));
+		}
+		
 		for(int i=0;i<arrLstFiles.length;i++){
+			if(arrLstFiles[i].getName().equals("org.apache.commons")){
+				continue;
+			}
 			ArrayList<String> arrSource = FileUtil.getFileStringArray(fop_output+arrLstFiles[i].getName()+".source.txt");
 			ArrayList<String> arrTarget = FileUtil.getFileStringArray(fop_output+arrLstFiles[i].getName()+".target.txt");
 			ArrayList<String> arrLocation = FileUtil.getFileStringArray(fop_output+arrLstFiles[i].getName()+".location.txt");
@@ -248,22 +258,45 @@ public class Generate100KTrainTest {
 			int numberForTuneInLib=lengthOfPairs/10;
 			System.out.println("begin lib "+arrLstFiles[i]);
 			
-			//create hash set to store all possible test line after each fold;
-			//from fold 1 to fold 10, the list will be reduced
+			
+			
+			//from fold 1 to fold 10, the list will be reduced						
 			ArrayList<Integer> listPossibleTestPerEachFold=new ArrayList<Integer>();
+			ArrayList<String> setTestOldPerLib=new ArrayList<String>();
+			HashSet<Integer> setTestForFold1=new HashSet<Integer>();
 			for(int j=0;j<arrSource.size();j++){
-				listPossibleTestPerEachFold.add(j);
+				if(setTestOld.contains(arrLocation.get(j))){
+					setTestOldPerLib.add(arrLocation.get(j));
+					setTestForFold1.add(j);
+				}else{
+					listPossibleTestPerEachFold.add(j);
+					
+				}
+				
 				//String[] arrItemSource=arrSource.get(j).split("\n");
 				
 			}
 			
-			
+			System.out.println(setTestForFold1.size()+" tests is from previous");
 			
 			for(int indexFold=1;indexFold<=10;indexFold++){
 				int indexForTest=0;
 				HashSet<Integer> setTestPerFold=new HashSet<Integer>();
 				HashSet<Integer> setTunePerFold=new HashSet<Integer>();
-				
+				if(indexFold==1){
+					setTestPerFold=setTestForFold1;
+					indexForTest=setTestPerFold.size();
+					
+					
+					while ( indexForTest<=numberForTestInLib ){
+						indexForTest++;
+						int randomIndexForTest=randInt(0, listPossibleTestPerEachFold.size()-1);
+						if(!setTestPerFold.contains(randomIndexForTest)){
+							setTestPerFold.add(listPossibleTestPerEachFold.get(randomIndexForTest));
+							listPossibleTestPerEachFold.remove(randomIndexForTest);
+						}				
+					}
+				}
 				if(indexFold<10){
 					while ( indexForTest<=numberForTestInLib ){
 						indexForTest++;

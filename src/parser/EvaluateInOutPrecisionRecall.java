@@ -3,13 +3,15 @@ package parser;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import utils.FileUtil;
 
 public class EvaluateInOutPrecisionRecall {
 
-	static String fop_input="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_600K\\fold-1\\";
+	static String fop_input="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_5libs_newApp\\fold-1\\sensitivity_3fold\\";
+//	/sensitivity_5fold_ressult\\
 	
 	public static boolean checkAPIsInLibrary(HashSet<String> setLib,String token){
 		boolean check=false;
@@ -23,6 +25,19 @@ public class EvaluateInOutPrecisionRecall {
 		return check;
 	}
 	
+	public static String getPackageAPIsInLibrary(HashSet<String> setLib,String token){
+		String result="";
+		for(String str:setLib){
+			if(token.startsWith(str)){
+				//System.out.println(token);
+				result=str;
+				break;
+			}
+		}
+		return result;
+	}
+	
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		String fn_trainSource="train.s";
@@ -34,28 +49,50 @@ public class EvaluateInOutPrecisionRecall {
 		String fn_log_incorrect="log_incorrect.txt";
 		String fn_log_outVocab="log_outVocab.txt";
 		String fn_correctOrderTranslated="correctOrderTranslatedResult.txt";
+		String fn_statisticCorrectMapping="correct_mapping.csv";
+		String fn_statisticIncorrectMapping="incorrect_mapping.csv";
+		String fn_vocabulary="vocabulary.txt";
 		
 		ArrayList<String> arrTrainSource=FileUtil.getFileStringArray(fop_input+fn_trainSource);
 		ArrayList<String> arrTestSource=FileUtil.getFileStringArray(fop_input+fn_testSource);
 		ArrayList<String> arrTestTarget=FileUtil.getFileStringArray(fop_input+fn_testTarget);
 		ArrayList<String> arrTestTranslation=FileUtil.getFileStringArray(fop_input+fn_testTranslation);
 		ArrayList<String> arrEvaluatedTypes=FileUtil.getFileStringArray(fop_input+"evaluatedResults.txt");
+		ArrayList<String> arrVocabFromTraining=FileUtil.getFileStringArray(fop_input+fn_vocabulary);
+		
 		
 		HashSet<String> setVocabTrainSource=new HashSet<String>();
 		HashSet<String> setVocabTrainTarget=new HashSet<String>();
-		HashSet<String> setVocabMap=new HashSet<String>();
+		HashMap<String,Integer> mapVocabTraining=new HashMap<String, Integer>();
 		
 		HashSet<String> set5Libraries=new HashSet<String>();
 		set5Libraries.add("android.");
 		set5Libraries.add("com.google.gwt.");
 		set5Libraries.add("com.thoughtworks.xstream.");
 		set5Libraries.add("org.hibernate.");
-		set5Libraries.add("org.joda.time.");
+		set5Libraries.add("org.joda.time.");		
+				//set5Libraries.add("org.apache.commons.");
+		set5Libraries.add("java.");
+		
+		HashMap<String,HashMap<String,Integer>> mapCountPerLibrary=new HashMap<String, HashMap<String,Integer>>();
+		
+		for(String strItem:set5Libraries){
+			HashMap<String,Integer> mapElement=new HashMap<String, Integer>();
+			mapElement.put("Correct", 0);
+			mapElement.put("Incorrect", 0);
+			mapElement.put("OOT", 0);
+			mapElement.put("OOS", 0);
+			mapCountPerLibrary.put(strItem, mapElement);
+		}
+		
 		
 //		set5Libraries.add("org.apache.");
 //		set5Libraries.add("java.");
 		
-		
+		for(int i=0;i<arrVocabFromTraining.size();i++){
+			String[] arrMap=arrVocabFromTraining.get(i).split("\t");
+			mapVocabTraining.put(arrMap[0].trim(),Integer.parseInt (arrMap[1].trim()));
+		}
 		
 		
 		HashSet<Integer> lstNotReorderedLine=new HashSet<Integer>();
@@ -106,12 +143,14 @@ public class EvaluateInOutPrecisionRecall {
 		FileUtil.writeToFile(fop_input+fn_result, "Correct"+"\t"+"Incorrect"+"\t"+"Out_of_source"+"\t"+"Out_of_target"+"\t"+"Out_of_vocab"+"\n");
 		FileUtil.writeToFile(fop_input+fn_log_incorrect, "");
 		
-		PrintStream ptResult=null,ptIncorrect=null,ptOutVocab=null,ptCorrectTranslated=null;
+		PrintStream ptResult=null,ptIncorrect=null,ptOutVocab=null,ptCorrectTranslated=null,ptCorrect_map=null,ptIncorrect_map=null;
 		try{
 			ptResult=new PrintStream(new FileOutputStream(fop_input+fn_result));
 			ptIncorrect=new PrintStream(new FileOutputStream(fop_input+fn_log_incorrect));
 			ptCorrectTranslated=new PrintStream(new FileOutputStream(fop_input+fn_correctOrderTranslated));
 			ptOutVocab=new PrintStream(new FileOutputStream(fop_input+fn_log_outVocab));
+			ptCorrect_map=new PrintStream(new FileOutputStream(fop_input+fn_statisticCorrectMapping));
+			ptIncorrect_map=new PrintStream(new FileOutputStream(fop_input+fn_statisticIncorrectMapping));
 			
 		}catch(Exception ex){
 			ex.printStackTrace();
@@ -165,29 +204,45 @@ public class EvaluateInOutPrecisionRecall {
 			for(int j=0;j<itemSource.length;j++){
 				
 				//if(itemTarget[j].contains(".")){
+				//&&(!itemTrans[j].startsWith("."))
 				if(checkAPIsInLibrary(set5Libraries, itemTarget[j])){
+				String strPackageName=getPackageAPIsInLibrary(set5Libraries, itemTarget[j]);
 				if(!setVocabTrainSource.contains(itemSource[j])){
 						numCSourceLine++;
+						int currentNumber=mapCountPerLibrary.get(strPackageName).get("OOS");
+						mapCountPerLibrary.get(strPackageName).put("OOS",currentNumber+1);						
 						if(!setOutSource.contains(itemSource[j])){
 							strOutSource+=itemSource[j]+" ";
 							setOutSource.add(itemSource[j]);
+
 						}
 						
 					}
 					else if(!setVocabTrainTarget.contains(itemTarget[j])){
 						numCTargetLine++;
+						
+						int currentNumber=mapCountPerLibrary.get(strPackageName).get("OOT");
+						mapCountPerLibrary.get(strPackageName).put("OOT",currentNumber+1);
+						
+						
 						if(!setOutTarget.contains(itemTarget[j])){
 							strOutTarget+=itemTarget[j]+" ";
 							setOutTarget.add(itemTarget[j]);
 						}
 					}else if(itemTarget[j].equals(itemTrans[j])){
 						numCorrect++;
+						int currentNumber=mapCountPerLibrary.get(strPackageName).get("Correct");
+						mapCountPerLibrary.get(strPackageName).put("Correct",currentNumber+1);
+						ptCorrect_map.print(itemSource[j]+","+mapVocabTraining.get(itemSource[j])+"\n");
 					} else{
 						numIncorrect++;
-						if(!setIncorrect.contains(itemTrans[j]+"(Correct: "+itemTarget[j]+") ")){
+						int currentNumber=mapCountPerLibrary.get(strPackageName).get("Incorrect");
+						mapCountPerLibrary.get(strPackageName).put("Incorrect",currentNumber+1);
+					//	if(!setIncorrect.contains(itemTrans[j]+"(Correct: "+itemTarget[j]+") ")){
 							strIncorrectLog+=itemTrans[j]+"(Correct: "+itemTarget[j]+") ";
 							setIncorrect.add(itemTrans[j]+"(Correct: "+itemTarget[j]+") ");
-						}
+						//}
+							ptIncorrect_map.print(itemSource[j]+","+mapVocabTraining.get(itemSource[j])+"\n");
 						
 					}
 				}
@@ -211,6 +266,8 @@ public class EvaluateInOutPrecisionRecall {
 			ptIncorrect.close();
 			ptCorrectTranslated.close();
 			ptOutVocab.close();
+			ptCorrect_map.close();
+			ptIncorrect_map.close();
 			
 		}catch(Exception ex){
 			
@@ -219,6 +276,11 @@ public class EvaluateInOutPrecisionRecall {
 		FileUtil.appendToFile(fop_input+fn_result, countCorrect+"\t"+countIncorrect+"\t"+countOutOfSource+"\t"+countOutOfTarget+"\t"+countAllOutOfVocab+"\n");
 		FileUtil.appendToFile(fop_input+fn_result, "Precision in-vocab: "+countCorrect*1.0/(countCorrect+countIncorrect)+"\n");
 		FileUtil.appendToFile(fop_input+fn_result, "Recall out-vocab: "+countCorrect*1.0/(countCorrect+countIncorrect+countAllOutOfVocab)+"\n");
+		
+		for(String strItem:mapCountPerLibrary.keySet()){
+			HashMap<String,Integer> mapTemp=mapCountPerLibrary.get(strItem);
+			FileUtil.appendToFile(fop_input+fn_result, strItem+": "+mapTemp.get("Correct")+"\t"+mapTemp.get("Incorrect")+"\t"+mapTemp.get("OOS")+"\t"+mapTemp.get("OOT")+"\t"+(mapTemp.get("OOS")+mapTemp.get("OOT"))+"\n");
+		}
 		
 		
 	}
