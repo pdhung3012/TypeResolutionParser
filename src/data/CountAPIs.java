@@ -10,7 +10,7 @@ import utils.FileUtil;
 
 public class CountAPIs {
 
-	private static String fop_jdk="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_5libs_newApp\\fold-1\\";
+	private static String fop_jdk="C:\\Users\\pdhung\\Desktop\\hungData\\research\\ImportantProjects\\SpecMiningProject\\TypeResolutionTranslation\\output_sov4\\";
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		ArrayList<String> arrSources=FileUtil.getFileStringArray(fop_jdk+"train.s");		
@@ -52,7 +52,7 @@ public class CountAPIs {
 			
 		}
 		for(String strKey:setTokens.keySet()){
-			ptTokens.print(strKey+"\t"+setTokens2.get(strKey).size()+"\n");
+			ptTokens.print(strKey+"\t"+setTokens2.get(strKey).size()+"\t"+setTokens2.get(strKey).toString()+"\n");
 		}
 		
 		try{
