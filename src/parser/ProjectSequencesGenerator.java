@@ -426,6 +426,83 @@ public class ProjectSequencesGenerator {
 		return numbers;
 	}
 	
+	/**
+	 * 
+	 * @param inPath
+	 * @param doVerify
+	 * @return 	numbers[0]: 0-same number of sequences, 1-different numbers of sequences;
+	 * 			numbers[1]: number of sequences with different lengths;
+	 * 			numbers[2]: number of sequences with non-aligned tokens;
+	 * 			numbers[3]: number of non-aligned tokens 
+	 */
+	public static int[] generateAlignmentForCrossValidation(String inPath, boolean doVerify) {
+		int[] numbers = new int[]{0, 0, 0, 0};
+		ArrayList<String> sourceSequences = FileUtil.getFileStringArray(inPath + "/train.s"), 
+				targetSequences = FileUtil.getFileStringArray(inPath + "/train.t");
+		if (doVerify)
+			if (sourceSequences.size() != targetSequences.size()) {
+				numbers[0]++;
+//				throw new AssertionError("Numbers of source and target sequences are not the same!!!");
+			}
+		File dir = new File(inPath + "-alignment");
+		if (!dir.exists())
+			dir.mkdirs();
+		PrintStream psS2T = null, psT2S = null;
+		try {
+			psS2T = new PrintStream(new FileOutputStream(dir.getAbsolutePath() + "/training.s-t.A3"));
+			psT2S = new PrintStream(new FileOutputStream(dir.getAbsolutePath() + "/training.t-s.A3"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			if (psS2T != null)
+				psS2T.close();
+			if (psT2S != null)
+				psT2S.close();
+			e.printStackTrace();
+			return null;
+		}
+		for (int i = 0; i < sourceSequences.size(); i++) {
+			String source = sourceSequences.get(i), target = targetSequences.get(i);
+			String[] sTokens = source.trim().split(" "), tTokens = target.trim().split(" ");
+			if (doVerify) {
+				if (sTokens.length != tTokens.length) {
+					numbers[1]++;
+//					throw new AssertionError("Lengths of source and target sequences are not the same!!!");
+				}
+				boolean aligned = true;
+				for (int j = 0; j < sTokens.length; j++) {
+					String s = sTokens[j], t = tTokens[j];
+					if ((t.contains(".") && !t.substring(t.lastIndexOf('.')+1).equals(s.substring(s.lastIndexOf('.')+1))) || (!t.contains(".") && !t.equals(s))) {
+						numbers[3]++;
+						aligned = false;
+//						throw new AssertionError("Source and target are not aligned!!!");
+					}
+				}
+				if (!aligned)
+					numbers[2]++;
+			}
+			String headerS2T = generateHeader(sTokens, tTokens, i), headerT2S = generateHeader(tTokens, sTokens, i);
+			psS2T.println(headerS2T);
+			psT2S.println(headerT2S);
+			psS2T.println(target);
+			psT2S.println(source);
+			String alignmentS2T = generateAlignment(sTokens), alignmentT2S = generateAlignment(tTokens);
+			psS2T.println(alignmentS2T);
+			psT2S.println(alignmentT2S);
+		}
+		psS2T.flush();
+		psT2S.flush();
+		psS2T.close();
+		psT2S.close();
+		if (doVerify) {
+			if (sourceSequences.size()*3 != FileUtil.countNumberOfLines(dir.getAbsolutePath() + "/training.s-t.A3")
+					|| targetSequences.size()*3 != FileUtil.countNumberOfLines(dir.getAbsolutePath() + "/training.t-s.A3"))
+				numbers[0]++;
+		}
+		sourceSequences.clear();
+		targetSequences.clear();
+		return numbers;
+	}
+	
 	private static String generateAlignment(String[] tokens) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("NULL ({  })");
