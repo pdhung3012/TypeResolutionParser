@@ -2,11 +2,11 @@ package parser;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import org.eclipse.jdt.core.dom.*;
 
 public class SequenceGenerator extends ASTVisitor {
-	private static final boolean USE_SIMPLE_METHOD_NAME = false;
+	private static final String SEPARATOR = "#";
+	
 	private String className, superClassName;
 	private int numOfExpressions = 0, numOfResolvedExpressions = 0;
 	private StringBuilder fullTokens = new StringBuilder(), partialTokens = new StringBuilder();
@@ -97,6 +97,18 @@ public class SequenceGenerator extends ASTVisitor {
 		if (p instanceof VariableDeclarationStatement)
 			return ((VariableDeclarationStatement) p).getType();
 		return null;
+	}
+
+	private String getSignature(IMethodBinding method) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(method.getDeclaringClass().getTypeDeclaration().getQualifiedName());
+		sb.append("." + method.getName());
+		sb.append("(");
+		sb.append(SEPARATOR);
+		for (ITypeBinding tb : method.getParameterTypes())
+			sb.append(tb.getTypeDeclaration().getName() + "#");
+		sb.append(")");
+		return sb.toString();
 	}
 
 	static String getUnresolvedType(Type type) {
@@ -315,9 +327,13 @@ public class SequenceGenerator extends ASTVisitor {
 		ITypeBinding tb = node.getType().resolveBinding();
 		if (tb != null && tb.getTypeDeclaration().isLocal())
 			return false;
-		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
-		this.fullTokens.append(" new " + rtype + "() ");
-		this.partialTokens.append(" new " + utype + "() ");
+		String utype = getUnresolvedType(node.getType());
+		IMethodBinding b = node.resolveConstructorBinding();
+		if (b == null)
+			this.fullTokens.append(" new " + utype + "(" + node.arguments().size() + ") ");
+		else
+			this.fullTokens.append(" new " + getSignature(b.getMethodDeclaration()) + " ");
+		this.partialTokens.append(" new " + utype + "(" + node.arguments().size() + ") ");
 		for (Iterator it = node.arguments().iterator(); it.hasNext(); ) {
 			Expression e = (Expression) it.next();
 			e.accept(this);
@@ -342,10 +358,10 @@ public class SequenceGenerator extends ASTVisitor {
 			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
 		}
-		String name = "." + className + "()";
+		String name = "." + className + "(" + node.arguments().size() + ")";
 		this.partialTokens.append(" " + name + " ");
 		if (tb != null)
-			name = getQualifiedName(tb) + name;
+			name = getSignature(b.getMethodDeclaration());
 		this.fullTokens.append(" " + name + " ");
 		for (int i = 0; i < node.arguments().size(); i++)
 			((ASTNode) node.arguments().get(i)).accept(this);
@@ -495,7 +511,7 @@ public class SequenceGenerator extends ASTVisitor {
 			TypeLiteral lit = (TypeLiteral) node.getExpression();
 			String utype = getUnresolvedType(lit.getType()), rtype = getResolvedType(lit.getType());
 			this.fullTokens.append(" " + rtype + ".class." + node.getName().getIdentifier() + "() ");
-			this.partialTokens.append(" " + utype + ".class." + node.getName().getIdentifier() + "() ");
+			this.partialTokens.append(" " + utype + ".class." + node.getName().getIdentifier() + "(" + node.arguments().size() + ") ");
 		} else {
 			IMethodBinding b = node.resolveMethodBinding();
 			ITypeBinding tb = null;
@@ -520,17 +536,10 @@ public class SequenceGenerator extends ASTVisitor {
 					this.fullTokens.append(" this ");
 				}
 			}
-			String name = "."+ node.getName().getIdentifier() + "()";
+			String name = "."+ node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
 			this.partialTokens.append(" " + name + " ");
-			if (!USE_SIMPLE_METHOD_NAME && tb != null 
-//					&& !name.equals(".toString()") 
-//					&& !name.equals(".equals()") 
-//					&& !name.equals(".clone()") 
-//					&& !name.equals(".getClass()")
-//					&& !name.equals(".hashCode()")
-//					&& !name.equals(".valueOf()")
-					)
-				name = getQualifiedName(tb) + name;
+			if (tb != null)
+				name = getSignature(b.getMethodDeclaration());
 			this.fullTokens.append(" " + name + " ");
 		}
 		for (int i = 0; i < node.arguments().size(); i++)
@@ -696,10 +705,10 @@ public class SequenceGenerator extends ASTVisitor {
 			if (tb.isLocal() || tb.getQualifiedName().isEmpty())
 				return false;
 		}
-		String name = "." + superClassName + "()";
+		String name = "." + superClassName + "(" + node.arguments().size() + ")";
 		this.partialTokens.append(" " + name + " ");
 		if (tb != null)
-			name = getQualifiedName(tb) + name;
+			name = getSignature(b.getMethodDeclaration());
 		this.fullTokens.append(" " + name + " ");
 		for (int i = 0; i < node.arguments().size(); i++)
 			((ASTNode) node.arguments().get(i)).accept(this);
@@ -743,17 +752,10 @@ public class SequenceGenerator extends ASTVisitor {
 			this.partialTokens.append(" super ");
 			this.fullTokens.append(" super ");
 		}
-		String name = "." + node.getName().getIdentifier() + "()";
+		String name = "." + node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
 		this.partialTokens.append(" " + name + " ");
-		if (!USE_SIMPLE_METHOD_NAME && tb != null 
-//				&& !name.equals(".toString()") 
-//				&& !name.equals(".equals()") 
-//				&& !name.equals(".clone()") 
-//				&& !name.equals(".getClass()")
-//				&& !name.equals(".hashCode()")
-//				&& !name.equals(".valueOf()")
-				)
-			name = getQualifiedName(tb) + name;
+		if (tb != null)
+			name = getSignature(b.getMethodDeclaration());
 		this.fullTokens.append(" " + name + " ");
 		for (int i = 0; i < node.arguments().size(); i++)
 			((ASTNode) node.arguments().get(i)).accept(this);
