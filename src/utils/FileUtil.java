@@ -16,6 +16,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class FileUtil {
 	public static String getFileContent(String fp) {
@@ -144,13 +151,29 @@ public class FileUtil {
 	}
 
 
-	public static ArrayList<File> getPaths(File dir) {
+	public static ArrayList<File> getPaths(File file) {
 		ArrayList<File> files = new ArrayList<>();
-		if (dir.isDirectory())
-			for (File sub : dir.listFiles())
+		if (file.isDirectory())
+			for (File sub : file.listFiles())
 				files.addAll(getPaths(sub));
-		else if (dir.getName().endsWith(".java"))
-			files.add(dir);
+		else if (file.getName().endsWith(".java")) {
+			Map options = JavaCore.getOptions();
+			options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
+			options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_8);
+			options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_8);
+			ASTParser parser = ASTParser.newParser(AST.JLS8);
+			parser.setCompilerOptions(options);
+			parser.setIgnoreMethodBodies(true);
+			parser.setSource(FileUtil.getFileContent(file.getAbsolutePath()).toCharArray());
+			try {
+				CompilationUnit ast = (CompilationUnit) parser.createAST(null);
+				if (ast.getPackage() != null && !ast.types().isEmpty()) {
+					files.add(file);
+				}
+			} catch (Throwable t) {
+				// Skip file
+			}
+		}
 		return files;
 	}
 

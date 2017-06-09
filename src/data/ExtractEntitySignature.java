@@ -101,7 +101,7 @@ public class ExtractEntitySignature {
 						FileUtil.writeToFile(new File(out, file.getName() + "-fields").getAbsolutePath(), ees.fields);
 					} catch (Throwable t) {
 						System.err.println("Error in parsing jar file " + jarFilePath);
-						//t.printStackTrace();
+						t.printStackTrace();
 						System.err.println(t.getMessage());
 					}
 				}
@@ -147,6 +147,7 @@ public class ExtractEntitySignature {
 		if (dir.isDirectory()) {
 			if (new File(dir, ".git").exists()) {
 				numOfProjects.incrementAndGet();
+				System.out.println("Projects: " + numOfProjects);
 				final File out = new File(OUTPUT_DIR);
 				if (new File(out, dir.getParentFile().getName() + "___" + dir.getName() + "-types").exists())
 					return;
@@ -169,7 +170,7 @@ public class ExtractEntitySignature {
 							FileUtil.writeToFile(new File(out, dir.getParentFile().getName() + "___" + dir.getName() + "-fields").getAbsolutePath(), ees.fields);
 						} catch (Throwable t) {
 							System.err.println("Error in parsing project " + dir.getAbsolutePath());
-							//t.printStackTrace();
+							t.printStackTrace();
 							System.err.println(t.getMessage());
 						}
 					}
@@ -201,6 +202,7 @@ public class ExtractEntitySignature {
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		parser.setCompilerOptions(options);
 		parser.setEnvironment(new String[0], new String[]{}, new String[]{}, true);
+		parser.setIgnoreMethodBodies(true);
 		parser.setResolveBindings(true);
 		parser.createASTs(paths, null, new String[0], r, null);
 		for (CompilationUnit cu : cus)
