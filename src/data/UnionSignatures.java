@@ -2,9 +2,7 @@ package data;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
-
-import utils.FileUtil;
+import java.util.Scanner;
 
 public class UnionSignatures {
 
@@ -35,6 +33,23 @@ public class UnionSignatures {
 		System.out.println("Types: " + dict.numOfTypes);
 		System.out.println("Methods: " + dict.numOfMethods);
 		System.out.println("Fields: " + dict.numOfFields);
+		
+		Scanner scan = new Scanner(System.in);
+		while (true) {
+			String text = scan.nextLine();
+			String[] parts = text.split("\\s");
+			if (parts.length == 2) {
+				if (parts[0].equals("t"))
+					System.out.println(new ArrayList<APIType>(dict.getTypesByName(parts[1])));
+				else if (parts[0].equals("m"))
+					System.out.println(new ArrayList<APIMethod>(dict.getMethodsByName(parts[1])));
+				else if (parts[0].equals("f"))
+					System.out.println(new ArrayList<APIField>(dict.getFieldsByName(parts[1])));
+			}
+			if (text.isEmpty())
+				break;
+		}
+		scan.close();
 //		HashSet<String> types = new HashSet<>(), methods = new HashSet<>(), fields = new HashSet<>();
 //		int i = 0;
 //		for (File file : in.listFiles()) {
