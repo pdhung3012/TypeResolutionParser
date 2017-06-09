@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 import utils.FileUtil;
 
@@ -18,30 +19,82 @@ public class APIDictionary implements Serializable {
 	HashMap<String, HashSet<APIField>> nameFields= new HashMap<>();
 	int numOfTypes = 0, numOfMethods = 0, numOfFields = 0;
 	
-	public void build(String path) {
-		File dir = new File(path);
+	public void build(File dir) {
+		System.out.println("Building types");
 		for (File file : dir.listFiles()) {
 			if (file.getName().endsWith("-types")) {
 				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
-				for (String line : content) {
+				for (String line : content)
 					addType(line);
-				}
 			}
 		}
+		System.out.println("Done building types");
+		System.out.println("Building methods and fields");
 		for (File file : dir.listFiles()) {
 			if (file.getName().endsWith("-methods")) {
 				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
-				for (String line : content) {
+				for (String line : content)
 					addMethod(line);
-				}
 			} else if (file.getName().endsWith("-fields")) {
 				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
-				for (String line : content) {
+				for (String line : content)
 					addField(line);
-				}
 			}
 		}
+		System.out.println("Done building methods and fields");
+		System.out.println("Building maps");
 		build(root);
+		System.out.println("Done building maps");
+	}
+
+	public void build(File dir, String list, int max) {
+		System.out.println("Building types");
+		for (File file : dir.listFiles()) {
+			if (file.getName().endsWith(".jar-types")) {
+				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
+				for (String line : content)
+					addType(line);
+			}
+		}
+		List<String> names = FileUtil.getFileStringArray(list);
+		names = names.subList(0, Math.min(max, names.size()));
+		for (String name : names) {
+			ArrayList<String> content = FileUtil.getFileStringArray(dir.getAbsolutePath() + "/" + name.replace("/", "___") + "-types");
+			for (String line : content)
+				addType(line);
+		}
+		System.out.println("Done building types");
+		System.out.println("Building fields");
+		for (File file : dir.listFiles()) {
+			if (file.getName().endsWith(".jar-fields")) {
+				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
+				for (String line : content)
+					addField(line);
+			}
+		}
+		for (String name : names) {
+			ArrayList<String> content = FileUtil.getFileStringArray(dir.getAbsolutePath() + "/" + name.replace("/", "___") + "-fields");
+			for (String line : content)
+				addField(line);
+		}
+		System.out.println("Done building fields");
+		System.out.println("Building methods");
+		for (File file : dir.listFiles()) {
+			if (file.getName().endsWith(".jar-methods")) {
+				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
+				for (String line : content)
+					addMethod(line);
+			} 
+		}
+		for (String name : names) {
+			ArrayList<String> content = FileUtil.getFileStringArray(dir.getAbsolutePath() + "/" + name.replace("/", "___") + "-methods");
+			for (String line : content)
+				addMethod(line);
+		}
+		System.out.println("Done building methods");
+		System.out.println("Building maps");
+		build(root);
+		System.out.println("Done building maps");
 	}
 
 	private void build(APIPackageNode pn) {
@@ -127,4 +180,17 @@ public class APIDictionary implements Serializable {
 		APIType type = p.addType(parts[i]);
 		return type;
 	}
+	
+	public HashSet<APIType> getTypesByName(String name) {
+		return this.nameTypes.get(name);
+	}
+	
+	public HashSet<APIMethod> getMethodsByName(String name) {
+		return this.nameMethods.get(name);
+	}
+	
+	public HashSet<APIField> getFieldsByName(String name) {
+		return this.nameFields.get(name);
+	}
+	
 }

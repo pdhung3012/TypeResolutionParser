@@ -9,26 +9,26 @@ import utils.FileUtil;
 public class UnionSignatures {
 
 	public static void main(String[] args) {
-		int numOfTypes = 0, numOfMethods = 0, numOfFields = 0;
 		File in = new File("T:/type-resolution");
-		for (File file : in.listFiles()) {
-			if (file.getName().endsWith("-types")) {
-				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
-				numOfTypes += content.size();
-			} else if (file.getName().endsWith("-methods")) {
-				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
-				numOfMethods += content.size();
-			} else if (file.getName().endsWith("-fields")) {
-				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
-				numOfFields += content.size();
-			}
-		}
-		System.out.println("Types: " + numOfTypes);
-		System.out.println("Methods: " + numOfMethods);
-		System.out.println("Fields: " + numOfFields);
+//		int numOfTypes = 0, numOfMethods = 0, numOfFields = 0;
+//		for (File file : in.listFiles()) {
+//			if (file.getName().endsWith("-types")) {
+//				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
+//				numOfTypes += content.size();
+//			} else if (file.getName().endsWith("-methods")) {
+//				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
+//				numOfMethods += content.size();
+//			} else if (file.getName().endsWith("-fields")) {
+//				ArrayList<String> content = FileUtil.getFileStringArray(file.getAbsolutePath());
+//				numOfFields += content.size();
+//			}
+//		}
+//		System.out.println("Types: " + numOfTypes);
+//		System.out.println("Methods: " + numOfMethods);
+//		System.out.println("Fields: " + numOfFields);
 		long beforeUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 		APIDictionary dict = new APIDictionary();
-		dict.build(in.getAbsolutePath());
+		dict.build(in, "G:/github/repos-10stars-100commits.csv", 5000);
 //		FileUtil.writeObjectToFile(dict, "T:/temp/dictionary.dat", false);
 		long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 		System.out.println("Memory usage: " + (afterUsedMem - beforeUsedMem) / 1000 / 1000);
