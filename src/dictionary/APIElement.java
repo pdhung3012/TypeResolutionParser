@@ -4,6 +4,6 @@ public abstract class APIElement {
 	
 	String name;
 	
-	abstract String getFQN();
+	abstract public String getFQN();
 
 }
