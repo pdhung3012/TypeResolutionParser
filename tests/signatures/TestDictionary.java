@@ -35,7 +35,7 @@ public class TestDictionary {
 		System.out.println(l = new ArrayList<APIElement>(dict.getTypesByName("String")));
 		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.String"));
 		System.out.println(l = new ArrayList<APIElement>(dict.getMethodsByName("substring(1)")));
-		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.String.substring(int,)"));
+		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.String.substring(1)(int,)"));
 		System.out.println(l = new ArrayList<APIElement>(dict.getFieldsByName("MAX_VALUE")));
 		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.Integer.MAX_VALUE"));
 	

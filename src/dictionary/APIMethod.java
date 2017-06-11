@@ -1,15 +1,16 @@
 package dictionary;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public class APIMethod extends APIElement implements Serializable {
 	private static final long serialVersionUID = -2427857003057367443L;
 	
-	APIType type, returnType;
-	APIType[] parameterTypes;
+	private APIType type, returnType;
+	private APIType[] parameterTypes;
 	
-	public APIMethod(String name, APIType type, APIType[] parameterTypes, APIType returnType) {
-		this.name = name;
+	public APIMethod(Integer id, APIType type, APIType[] parameterTypes, APIType returnType) {
+		super(id);
 		this.type = type;
 		this.parameterTypes = parameterTypes;
 		this.returnType = returnType;
@@ -17,7 +18,7 @@ public class APIMethod extends APIElement implements Serializable {
 	
 	@Override
 	public String getFQN() {
-		return this.type.getFQN() + "." + name + "(" + getParameterTypesString() + ")";
+		return this.type.getFQN() + "." + getName() + "(" + getParameterTypesString() + ")";
 	}
 	
 	private String getParameterTypesString() {
@@ -25,6 +26,10 @@ public class APIMethod extends APIElement implements Serializable {
 		for (APIType t : parameterTypes)
 			sb.append(t.getFQN() + ",");
 		return sb.toString();
+	}
+
+	public boolean hasParameterTypes(APIType[] parameterTypes) {
+		return Arrays.equals(this.parameterTypes, parameterTypes);
 	}
 
 	@Override

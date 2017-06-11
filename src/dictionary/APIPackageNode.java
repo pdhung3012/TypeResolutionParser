@@ -3,43 +3,45 @@ package dictionary;
 import java.io.Serializable;
 import java.util.HashMap;
 
-public class APIPackageNode implements Serializable {
+public class APIPackageNode extends APIElement implements Serializable {
 	private static final long serialVersionUID = -654414935534276897L;
 	
-	String name;
 	APIPackageNode parent;
-	HashMap<String, APIPackageNode> subPackages = new HashMap<>();
-	HashMap<String, APIType> types = new HashMap<>();
+	HashMap<Integer, APIPackageNode> subPackages = new HashMap<>();
+	HashMap<Integer, APIType> types = new HashMap<>();
 	
-	public APIPackageNode(String name, APIPackageNode parent) {
-		this.name = name;
+	public APIPackageNode(Integer id, APIPackageNode parent) {
+		super(id);
 		this.parent = parent;
 	}
 	
 	public APIPackageNode addSubPackage(String name) {
-		APIPackageNode sub = subPackages.get(name);
+		Integer id = APIDictionary.getId(name);
+		APIPackageNode sub = subPackages.get(id);
 		if (sub == null) {
-			sub = new APIPackageNode(name, this);
-			subPackages.put(name, sub);
+			sub = new APIPackageNode(id, this);
+			subPackages.put(id, sub);
 		}
 		return sub;
 	}
 	
 	public APIType addType(String name) {
-		APIType type = types.get(name);
+		Integer id = APIDictionary.getId(name);
+		APIType type = types.get(id);
 		if (type == null) {
-			type = new APIType(name, this);
-			types.put(name, type);
+			type = new APIType(id, this);
+			types.put(id, type);
 		}
 		return type;
 	}
 
+	@Override
 	public String getFQN() {
-		return this.parent == null || isTop() ? name : this.parent.getFQN() + "." + name;
+		return this.parent == null || isTop() ? getName() : this.parent.getFQN() + "." + getName();
 	}
 	
 	private boolean isTop() {
-		return this.parent != null && this.parent.name.isEmpty();
+		return this.parent != null && this.parent.getName().isEmpty();
 	}
 
 	@Override

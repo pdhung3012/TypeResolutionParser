@@ -8,42 +8,52 @@ import java.util.HashMap;
 public class APIType extends APIElement implements Serializable {
 	private static final long serialVersionUID = -5790551948759393843L;
 	
-	APIPackageNode packageNode;
-	HashMap<String, APIField> fields = new HashMap<>();
-	HashMap<String, ArrayList<APIMethod>> methods = new HashMap<>();
+	private APIPackageNode packageNode;
+	private HashMap<Integer, APIField> fields = new HashMap<>();
+	private HashMap<Integer, ArrayList<APIMethod>> methods = new HashMap<>();
 	
-	public APIType(String name, APIPackageNode packageNode) {
-		this.name = name;
+	public APIType(Integer id, APIPackageNode packageNode) {
+		super(id);
 		this.packageNode = packageNode;
 	}
 
+	public HashMap<Integer, APIField> getFields() {
+		return fields;
+	}
+
+	public HashMap<Integer, ArrayList<APIMethod>> getMethods() {
+		return methods;
+	}
+
 	public APIField addField(String name, APIType fieldType) {
-		APIField field = fields.get(name);
+		Integer id = APIDictionary.getId(name);
+		APIField field = getFields().get(id);
 		if (field == null) {
-			field = new APIField(name, this, fieldType);
-			fields.put(name, field);
+			field = new APIField(id, this, fieldType);
+			getFields().put(id, field);
 		}
 		return field;
 	}
 
 	public APIMethod addMethod(String name, APIType[] parameterTypes, APIType returnType) {
 		String nameWithNumber = name + "(" + parameterTypes.length + ")";
-		ArrayList<APIMethod> ms = methods.get(nameWithNumber);
+		Integer id = APIDictionary.getId(nameWithNumber);
+		ArrayList<APIMethod> ms = getMethods().get(id);
 		if (ms == null) {
 			ms = new ArrayList<>();
-			methods.put(nameWithNumber, ms);
+			getMethods().put(id, ms);
 		}
 		for (APIMethod method : ms)
-			if (Arrays.equals(method.parameterTypes, parameterTypes))
+			if (method.hasParameterTypes(parameterTypes))
 				return method;
-		APIMethod method = new APIMethod(name, this, parameterTypes, returnType);
+		APIMethod method = new APIMethod(id, this, parameterTypes, returnType);
 		ms.add(method);
 		return method;
 	}
 	
 	@Override
 	public String getFQN() {
-		return this.packageNode.parent == null ? name : this.packageNode.getFQN() + "." + name;
+		return this.packageNode.parent == null ? getName() : this.packageNode.getFQN() + "." + getName();
 	}
 	
 	@Override
