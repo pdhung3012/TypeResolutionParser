@@ -1,4 +1,4 @@
-package data;
+package dictionary;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,6 +34,11 @@ public class UnionSignatures {
 		System.out.println("Methods: " + dict.numOfMethods);
 		System.out.println("Fields: " + dict.numOfFields);
 		
+
+		System.out.println(new ArrayList<APIType>(dict.getTypesByName("String")));
+		System.out.println(new ArrayList<APIMethod>(dict.getMethodsByName("substring(1)")));
+		System.out.println(new ArrayList<APIField>(dict.getFieldsByName("MAX_VALUE")));
+	
 		Scanner scan = new Scanner(System.in);
 		while (true) {
 			String text = scan.nextLine();

@@ -1,4 +1,4 @@
-package data;
+package dictionary;
 
 import java.io.File;
 import java.io.Serializable;
@@ -19,6 +19,18 @@ public class APIDictionary implements Serializable {
 	HashMap<String, HashSet<APIField>> nameFields= new HashMap<>();
 	int numOfTypes = 0, numOfMethods = 0, numOfFields = 0;
 	
+	public int getNumOfTypes() {
+		return numOfTypes;
+	}
+
+	public int getNumOfMethods() {
+		return numOfMethods;
+	}
+
+	public int getNumOfFields() {
+		return numOfFields;
+	}
+
 	public void build(File dir) {
 		System.out.println("Building types");
 		for (File file : dir.listFiles()) {

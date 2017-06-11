@@ -1,11 +1,10 @@
-package data;
+package dictionary;
 
 import java.io.Serializable;
 
-public class APIMethod implements Serializable {
+public class APIMethod extends APIElement implements Serializable {
 	private static final long serialVersionUID = -2427857003057367443L;
 	
-	String name;
 	APIType type, returnType;
 	APIType[] parameterTypes;
 	
@@ -16,6 +15,7 @@ public class APIMethod implements Serializable {
 		this.returnType = returnType;
 	}
 	
+	@Override
 	public String getFQN() {
 		return this.type.getFQN() + "." + name + "(" + getParameterTypesString() + ")";
 	}

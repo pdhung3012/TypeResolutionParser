@@ -1,14 +1,13 @@
-package data;
+package dictionary;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
-public class APIType implements Serializable {
+public class APIType extends APIElement implements Serializable {
 	private static final long serialVersionUID = -5790551948759393843L;
 	
-	String name;
 	APIPackageNode packageNode;
 	HashMap<String, APIField> fields = new HashMap<>();
 	HashMap<String, ArrayList<APIMethod>> methods = new HashMap<>();
@@ -42,6 +41,7 @@ public class APIType implements Serializable {
 		return method;
 	}
 	
+	@Override
 	public String getFQN() {
 		return this.packageNode.parent == null ? name : this.packageNode.getFQN() + "." + name;
 	}

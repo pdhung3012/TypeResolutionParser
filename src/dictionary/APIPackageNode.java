@@ -1,4 +1,4 @@
-package data;
+package dictionary;
 
 import java.io.Serializable;
 import java.util.HashMap;
