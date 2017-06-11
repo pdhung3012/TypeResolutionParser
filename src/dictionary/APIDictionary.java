@@ -58,6 +58,7 @@ public class APIDictionary implements Serializable {
 			}
 		}
 		System.out.println("Done building types");
+		System.gc();
 		System.out.println("Building methods and fields");
 		for (File file : dir.listFiles()) {
 			if (file.getName().endsWith("-methods")) {
@@ -71,9 +72,11 @@ public class APIDictionary implements Serializable {
 			}
 		}
 		System.out.println("Done building methods and fields");
+		System.gc();
 		System.out.println("Building maps");
 		build(root);
 		System.out.println("Done building maps");
+		System.gc();
 	}
 
 	public void build(File dir, String list, int max) {
@@ -93,6 +96,7 @@ public class APIDictionary implements Serializable {
 				addType(line);
 		}
 		System.out.println("Done building types");
+		System.gc();
 		System.out.println("Building fields");
 		for (File file : dir.listFiles()) {
 			if (file.getName().endsWith(".jar-fields")) {
@@ -107,6 +111,7 @@ public class APIDictionary implements Serializable {
 				addField(line);
 		}
 		System.out.println("Done building fields");
+		System.gc();
 		System.out.println("Building methods");
 		for (File file : dir.listFiles()) {
 			if (file.getName().endsWith(".jar-methods")) {
@@ -121,9 +126,11 @@ public class APIDictionary implements Serializable {
 				addMethod(line);
 		}
 		System.out.println("Done building methods");
+		System.gc();
 		System.out.println("Building maps");
 		build(root);
 		System.out.println("Done building maps");
+		System.gc();
 	}
 
 	private void build(APIPackageNode pn) {
