@@ -13,6 +13,14 @@ public class APIField extends APIElement implements Serializable {
 		this.returnType = returnType;
 	}
 	
+	public APIType getType() {
+		return type;
+	}
+
+	public APIType getReturnType() {
+		return returnType;
+	}
+
 	@Override
 	public String getFQN() {
 		return this.type.getFQN() + "." + getName();

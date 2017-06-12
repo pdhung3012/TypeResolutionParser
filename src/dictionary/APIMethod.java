@@ -16,6 +16,18 @@ public class APIMethod extends APIElement implements Serializable {
 		this.returnType = returnType;
 	}
 	
+	public APIType getType() {
+		return type;
+	}
+
+	public APIType getReturnType() {
+		return returnType;
+	}
+
+	public APIType[] getParameterTypes() {
+		return parameterTypes;
+	}
+
 	@Override
 	public String getFQN() {
 		return this.type.getFQN() + "." + getName() + "(" + getParameterTypesString() + ")";

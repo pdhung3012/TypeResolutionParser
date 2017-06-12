@@ -2,7 +2,6 @@ package dictionary;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class APIType extends APIElement implements Serializable {
