@@ -31,7 +31,6 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
 import utils.FileUtil;
 import utils.NotifyingBlockingThreadPoolExecutor;
 
@@ -219,9 +218,9 @@ public class ExtractEntitySignature {
 			return;
 		if (tb.isAnonymous() || tb.isLocal())
 			return;
-		String fqn = tb.getQualifiedName();
+		String fqn = getQualifiedName(tb);
 		if (tb.isNested())
-			fqn = tb.getDeclaringClass().getTypeDeclaration().getQualifiedName() + "$" + tb.getName();
+			fqn = getQualifiedName(tb.getDeclaringClass().getTypeDeclaration()) + "$" + tb.getName();
 		types.add(fqn);
 		numOfTypes.incrementAndGet();
 		for (int i = 0; i < type.bodyDeclarations().size(); i++) {
@@ -248,7 +247,7 @@ public class ExtractEntitySignature {
 	}
 
 	private static String getSignature(IVariableBinding vb) {
-		return vb.getDeclaringClass().getTypeDeclaration().getQualifiedName() + "." + vb.getName() + " " + vb.getType().getTypeDeclaration().getQualifiedName();
+		return getQualifiedName(vb.getDeclaringClass().getTypeDeclaration()) + "." + vb.getName() + " " + getQualifiedName(vb.getType().getTypeDeclaration());
 	}
 
 	private void extract(MethodDeclaration method) {
@@ -262,11 +261,18 @@ public class ExtractEntitySignature {
 
 	private static String getSignature(IMethodBinding mb) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(mb.getDeclaringClass().getTypeDeclaration().getQualifiedName() + "." + mb.getName() + " (");
+		sb.append(getQualifiedName(mb.getDeclaringClass().getTypeDeclaration()) + "." + mb.getName() + " (");
 		for (ITypeBinding tb : mb.getParameterTypes())
-			sb.append(tb.getTypeDeclaration().getQualifiedName() + ",");
-		sb.append(") " + mb.getReturnType().getTypeDeclaration().getQualifiedName());
+			sb.append(getQualifiedName(tb.getTypeDeclaration()) + ",");
+		sb.append(") " + getQualifiedName(mb.getReturnType().getTypeDeclaration()));
 		return sb.toString();
+	}
+
+	private static String getQualifiedName(ITypeBinding tb) {
+		if (tb.isArray()) {
+			return tb.getElementType().getTypeDeclaration().getQualifiedName() + "[" + tb.getDimensions() + "]";
+		} else 
+			return tb.getQualifiedName();
 	}
 
 	private void extract(Field field, String fqn) {
