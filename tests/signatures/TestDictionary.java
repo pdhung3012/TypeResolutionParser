@@ -77,6 +77,27 @@ public class TestDictionary {
 		System.out.println(l = new ArrayList<APIElement>(dict.getFieldsByName("MAX_VALUE")));
 		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.Integer.MAX_VALUE"));
     }
+    
+    @Test
+    public void test2() throws Exception {
+		File in = new File("T:/type-resolution");
+		long beforeUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		APIDictionary dict = new APIDictionary();
+		dict.build(in);
+		long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		System.out.println("Memory usage: " + (afterUsedMem - beforeUsedMem) / 1000 / 1000);
+		System.out.println("Types: " + dict.getNumOfTypes());
+		System.out.println("Methods: " + dict.getNumOfMethods());
+		System.out.println("Fields: " + dict.getNumOfFields());
+		
+		ArrayList<APIElement> l = new ArrayList<>();
+		System.out.println(l = new ArrayList<APIElement>(dict.getTypesByName("String")));
+		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.String"));
+		System.out.println(l = new ArrayList<APIElement>(dict.getMethodsByName("substring(1)")));
+		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.String.substring(1)(int,)"));
+		System.out.println(l = new ArrayList<APIElement>(dict.getFieldsByName("MAX_VALUE")));
+		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.Integer.MAX_VALUE"));
+    }
 
     private static class APIElementListMatcher<T> extends BaseMatcher<T> {
     	private String name;

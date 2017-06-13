@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import utils.FileUtil;
 import utils.NotifyingBlockingThreadPoolExecutor;
@@ -118,15 +119,17 @@ public class ExtractEntitySignature {
 					ClassParser parser = new ClassParser(jarFilePath, entry.getName());
 					JavaClass jc = parser.parse();
 					String pn = jc.getPackageName();
-					if (!jc.isAnonymous() && pn != null && !pn.isEmpty()) {
+					if ((jc.isPublic() || jc.isProtected()) && !jc.isAnonymous() && pn != null && !pn.isEmpty()) {
 						String className = jc.getClassName();
 //								className = className.replace('$', '.');
 						types.add(className);
 						numOfTypes.incrementAndGet();
 						for (Field field : jc.getFields())
-							extract(field, className);
+							if (field.isPublic() || field.isProtected())
+								extract(field, className);
 						for (Method method : jc.getMethods())
-							extract(method, className);
+							if (method.isPublic() || method.isProtected())
+								extract(method, className);
 					}
 				} catch (IOException | ClassFormatException e) {
 //							System.err.println("Error in parsing class file: " + entry.getName());
@@ -210,6 +213,8 @@ public class ExtractEntitySignature {
 	}
 
 	private void extract(AbstractTypeDeclaration type, String prefix) {
+		if (!Modifier.isPublic(type.getModifiers()) && !Modifier.isProtected(type.getModifiers()))
+			return;
 		ITypeBinding tb = type.resolveBinding();
 		if (tb == null)
 			return;
@@ -225,6 +230,8 @@ public class ExtractEntitySignature {
 		numOfTypes.incrementAndGet();
 		for (int i = 0; i < type.bodyDeclarations().size(); i++) {
 			BodyDeclaration bd = (BodyDeclaration) type.bodyDeclarations().get(i);
+			if (!Modifier.isPublic(bd.getModifiers()) && !Modifier.isProtected(bd.getModifiers()))
+				return;
 			if (bd instanceof FieldDeclaration)
 				extract((FieldDeclaration) bd);
 			else if (bd instanceof MethodDeclaration)
