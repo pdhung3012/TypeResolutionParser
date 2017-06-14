@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import org.eclipse.jdt.core.dom.*;
 import data.*;
+import dictionary.*;
 
 public class BakerVisitor extends ASTVisitor {
 	private static final String SEPARATOR = "#";

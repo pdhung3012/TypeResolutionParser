@@ -232,4 +232,14 @@ public class APIDictionary implements Serializable {
 		return this.nameFields.get(key);
 	}
 	
+	public HashSet<APIType> getTypesbyMethod(String name) 
+	{
+		HashSet<APIType> types = new HashSet<APIType>();
+		HashSet<APIMethod> methods = this.getMethodsByName(name);
+		for(APIMethod method: methods)
+		{
+			types.add(method.getType());
+		}
+		return types;
+	}
 }

@@ -26,7 +26,7 @@ import data.*;
 import parser.ClassPathUtil;
 import parser.ClassPathUtil.PomFile;
 import utils.FileUtil;
-
+import dictionary.*;
 public class BakerSequencesGenerator {
 	public HashMap<String, HashSet<APIType>> candTypes = new HashMap<String, HashSet<APIType>>();
 	public HashMap<String, HashSet<APIMethod>> candMethods = new HashMap<String, HashSet<APIMethod>>();
