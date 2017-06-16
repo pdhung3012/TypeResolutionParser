@@ -1,8 +1,6 @@
 package dictionary;
 
 import java.io.Serializable;
-import java.util.HashMap;
-
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class APIPackageNode extends APIElement implements Serializable {
