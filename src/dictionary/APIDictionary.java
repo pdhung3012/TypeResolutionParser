@@ -241,4 +241,20 @@ public class APIDictionary implements Serializable {
 			types.add(method.getType());
 		return types;
 	}
+	
+	public HashSet<APIField> getFields(String className, String fieldName) {
+		HashSet<APIField> fields = new HashSet<>();
+		HashSet<APIType> types = getTypesByName(className);
+		for (APIType type : types)
+			fields.add(type.getField(fieldName));
+		return fields;
+	}
+	
+	public HashSet<APIMethod> getMethods(String className, String methodName) {
+		HashSet<APIMethod> methods = new HashSet<>();
+		HashSet<APIType> types = getTypesByName(className);
+		for (APIType type : types)
+			methods.addAll(type.getMethods(methodName));
+		return methods;
+	}
 }

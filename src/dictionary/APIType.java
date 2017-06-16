@@ -23,6 +23,14 @@ public class APIType extends APIElement implements Serializable {
 	public TIntObjectHashMap<ArrayList<APIMethod>> getMethods() {
 		return methods;
 	}
+	
+	public APIField getField(String name) {
+		return fields.get(APIDictionary.getId(name));
+	}
+	
+	public ArrayList<APIMethod> getMethods(String name) {
+		return methods.get(APIDictionary.getId(name));
+	}
 
 	public APIField addField(String name, APIType fieldType) {
 		int id = APIDictionary.getId(name);
