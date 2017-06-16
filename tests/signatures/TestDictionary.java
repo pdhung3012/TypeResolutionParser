@@ -82,10 +82,13 @@ public class TestDictionary {
     public void test2() throws Exception {
 		File in = new File("T:/type-resolution");
 		long beforeUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		long beforeTime = System.currentTimeMillis();
 		APIDictionary dict = new APIDictionary();
 		dict.build(in);
 		long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		long afterTime = System.currentTimeMillis();
 		System.out.println("Memory usage: " + (afterUsedMem - beforeUsedMem) / 1000 / 1000);
+		System.out.println("Time: " + (afterTime - beforeTime) / 1000);
 		System.out.println("Types: " + dict.getNumOfTypes());
 		System.out.println("Methods: " + dict.getNumOfMethods());
 		System.out.println("Fields: " + dict.getNumOfFields());
