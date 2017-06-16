@@ -61,7 +61,6 @@ public class APIDictionary implements Serializable {
 		}
 		System.out.println("Done building types");
 		System.gc();
-		System.out.println("Types: " + numOfTypes);
 		System.out.println("Building methods and fields");
 		for (File file : dir.listFiles()) {
 			if (file.getName().endsWith("-methods")) {
@@ -76,8 +75,6 @@ public class APIDictionary implements Serializable {
 		}
 		System.out.println("Done building methods and fields");
 		System.gc();
-		System.out.println("Methods: " + numOfMethods);
-		System.out.println("Fields: " + numOfFields);
 		System.out.println("Building maps");
 		build(root);
 		System.out.println("Done building maps");
