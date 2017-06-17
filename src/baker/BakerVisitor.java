@@ -10,9 +10,9 @@ import dictionary.*;
 
 public class BakerVisitor extends ASTVisitor {
 	private static final String SEPARATOR = "#";
-	public HashMap<String, HashSet<APIType>> candTypes = new HashMap<String, HashSet<APIType>>();
-	public HashMap<String, HashSet<APIMethod>> candMethods = new HashMap<String, HashSet<APIMethod>>();
-	public HashMap<String, HashSet<APIField>> candFields = new HashMap<String, HashSet<APIField>>();
+	public HashMap<String, HashSet<APIType>> candTypes;
+	public HashMap<String, HashSet<APIMethod>> candMethods;
+	public HashMap<String, HashSet<APIField>> candFields;
 	private APIDictionary dictionary;
 	private String className, superClassName;
 	private int numOfExpressions = 0, numOfResolvedExpressions = 0;
@@ -20,12 +20,14 @@ public class BakerVisitor extends ASTVisitor {
 	private String fullSequence = null, partialSequence = null;
 	private String[] fullSequenceTokens, partialSequenceTokens;
 
-	
-	public BakerVisitor(String className, String superClassName, APIDictionary dictionary) {
+
+	public BakerVisitor(String className, String superClassName, HashMap<String, HashSet<APIType>> candTypes, HashMap<String, HashSet<APIMethod>> candMethods, HashMap<String, HashSet<APIField>> candFields, APIDictionary dictionary) {
 		super(false);
 		this.className = className;
 		this.superClassName = superClassName;
-
+		this.candTypes = candTypes;
+		this.candMethods = candMethods;
+		this.candFields = candFields;
 		this.dictionary = dictionary;
 	}
 
@@ -33,12 +35,12 @@ public class BakerVisitor extends ASTVisitor {
 	{
 		return candTypes;
 	}
-	
+
 	public HashMap<String, HashSet<APIMethod>> getMethods ()
 	{
 		return candMethods;
 	}
-	
+
 	public HashMap<String, HashSet<APIField>> getFields ()
 	{
 		return candFields;
@@ -54,7 +56,7 @@ public class BakerVisitor extends ASTVisitor {
 			buildPartialSequence();
 		return partialSequenceTokens;
 	}
-	
+
 	public String getFullSequence() {
 		if (fullSequence == null)
 			buildFullSequence();
@@ -74,7 +76,7 @@ public class BakerVisitor extends ASTVisitor {
 		for (int i = 1; i < parts.size(); i++)
 			this.fullSequenceTokens[i-1] = parts.get(i);
 	}
-	
+
 	private void buildPartialSequence() {
 		ArrayList<String> parts = buildSequence(partialTokens);
 		this.partialSequence = parts.get(0);
@@ -180,7 +182,7 @@ public class BakerVisitor extends ASTVisitor {
 			}
 			return s;
 		}
-		
+
 		return null;
 	}
 
@@ -240,7 +242,7 @@ public class BakerVisitor extends ASTVisitor {
 			}
 			return s;
 		}
-		
+
 		return null;
 	}
 
@@ -271,6 +273,9 @@ public class BakerVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(ArrayAccess node) {
+		//node.getArray() instanceof Name
+		//then resolve, and return false
+
 		return super.visit(node);
 	}
 
@@ -549,32 +554,76 @@ public class BakerVisitor extends ASTVisitor {
 			}
 			this.fullTokens.append(" ");
 			this.partialTokens.append(" ");
-			if (node.getExpression() != null) {
+			if (node.getExpression() != null) 
+			{
 				//the object was invoked on
 				String key = node.getExpression().toString();
-				if (node.getExpression().resolveTypeBinding() == null)
+				if (node.getExpression() instanceof MethodInvocation)  //Nested method invocation
 				{
-				if (!candTypes.containsKey(key))
+					MethodInvocation tempNode = ((MethodInvocation) node.getExpression());
+					//Visit from left to right
+					tempNode.accept(this);
+					//Parent receiver
+					String subkey =  tempNode.getExpression().toString();	
+					//Parent method
+					String tempMethod = node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
+					HashSet<APIType> receiver = dictionary.getTypesbyMethod(tempMethod);
+					//Receiver must match return type of parent method
+					if (candTypes.containsKey(subkey))
+					{
+						HashSet<APIType> candidateList = new HashSet<APIType>();
+						for(APIType type: candTypes.get(subkey))
+						{
+							APIType returnType = null;
+							//android.webkit.WebView.getSettings + abc.getSettings
+
+							String fullMethodName = type.getFQN() + "."+tempNode.getName().getIdentifier() + "(" + tempNode.arguments().size() + ")";
+							returnType = dictionary.getReturnTypeByMethod(fullMethodName);
+							if(receiver.contains(returnType))
+							{
+								candidateList.add(type);
+							}
+						}
+						//Update candidate List
+						candTypes.put(subkey, candidateList);
+					}
+				}
+				else
 				{
-					HashSet<APIType> candidateList = dictionary.getTypesByName(key);
+					if (!candTypes.containsKey(key))
+					{
+						HashSet<APIType> candidateList = dictionary.getTypesByName(key);
+						candTypes.put(key, candidateList);
+					}
+					HashSet<APIType> candidateList = candTypes.get(key);
+					String method = node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
+					System.out.println("key " + key);
+					System.out.println("method " + method);
+					HashSet<APIType> matchedType = dictionary.getTypesbyMethod(method);
+
+					if(!matchedType.isEmpty())
+					{
+						if(candidateList == null)
+						{
+							candidateList = matchedType;
+						}
+						else
+						{
+							candidateList.retainAll(matchedType);
+						}
+					}
 					candTypes.put(key, candidateList);
+					node.getExpression().accept(this);
+					System.out.println("Key "+ key + " and its candidate list: ");
+					for(APIType type: candTypes.get(key))
+					{
+						System.out.print(type.toString() + ", ");
+					}
+					System.out.println();
 				}
-				HashSet<APIType> candidateList = candTypes.get(key);
-				String method = node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
-				System.out.println(method);
-				HashSet<APIType> matchedType = dictionary.getTypesbyMethod(method);
-				if(!matchedType.isEmpty())
-					{candidateList.retainAll(matchedType);}
-				candTypes.put(key, candidateList);
-				node.getExpression().accept(this);
-				System.out.println("Key "+ key + " and its candidate list: ");
-				for(APIType type: candTypes.get(key))
-				{
-					System.out.print(type.toString() + ", ");
-				}
-				System.out.println();
-				}
-			} else {
+			} 
+			else 
+			{
 				if (tb != null) {
 					this.partialTokens.append(" " + getName(tb) + " ");
 					this.fullTokens.append(" " + getQualifiedName(tb) + " ");
@@ -584,6 +633,7 @@ public class BakerVisitor extends ASTVisitor {
 					this.fullTokens.append(" this ");
 				}
 			}
+			
 			String name = "."+ node.getName().getIdentifier() + "(" + node.arguments().size() + ")";	
 			this.partialTokens.append(" " + name + " ");
 			if (tb != null)
@@ -691,6 +741,7 @@ public class BakerVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(SimpleName node) {
+		//Not really resolve itself but its parent
 		IBinding b = node.resolveBinding();
 		if (b != null) {
 			if (b instanceof IVariableBinding) {
@@ -835,6 +886,7 @@ public class BakerVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(ThisExpression node) {
+		//can refer to super's field
 		ITypeBinding b = node.resolveTypeBinding();
 		if (b != null) {
 			b = b.getTypeDeclaration();
@@ -886,7 +938,7 @@ public class BakerVisitor extends ASTVisitor {
 	public boolean visit(TypeParameter node) {
 		return super.visit(node);
 	}
-	
+
 	@Override
 	public boolean visit(VariableDeclarationExpression node) {
 		ITypeBinding tb = node.getType().resolveBinding();
@@ -931,47 +983,47 @@ public class BakerVisitor extends ASTVisitor {
 	public boolean visit(WhileStatement node) {
 		return super.visit(node);
 	}
-	
+
 	@Override
 	public boolean visit(ArrayType node) {
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(IntersectionType node) {
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(ParameterizedType node) {
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(UnionType node) {
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(NameQualifiedType node) {
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(PrimitiveType node) {
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(QualifiedType node) {
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(SimpleType node) {
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(WildcardType node) {
 		return false;
