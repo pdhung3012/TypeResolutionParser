@@ -4,22 +4,23 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import utils.FileUtil;
 
 public class APIDictionary implements Serializable {
 	private static final long serialVersionUID = -8764767855443226874L;
 	
-	static final HashMap<String, Integer> nameIndex = new HashMap<>();
-	static final HashMap<Integer, String> indexName = new HashMap<>();
+	static final TObjectIntHashMap<String> nameIndex = new TObjectIntHashMap<>();
+	static final TIntObjectHashMap<byte[]> indexName = new TIntObjectHashMap<>();
 	
 	APIPackageNode root = new APIPackageNode(getId(""), null);
-	HashMap<Integer, HashSet<APIType>> nameTypes = new HashMap<>();
-	HashMap<Integer, HashSet<APIMethod>> nameMethods = new HashMap<>();
-	HashMap<Integer, HashSet<APIField>> nameFields= new HashMap<>();
+	TIntObjectHashMap<HashSet<APIType>> nameTypes = new TIntObjectHashMap<>();
+	TIntObjectHashMap<HashSet<APIMethod>> nameMethods = new TIntObjectHashMap<>();
+	TIntObjectHashMap<HashSet<APIField>> nameFields= new TIntObjectHashMap<>();
 	int numOfTypes = 0, numOfMethods = 0, numOfFields = 0;
 	
 	public int getNumOfTypes() {
@@ -34,18 +35,19 @@ public class APIDictionary implements Serializable {
 		return numOfFields;
 	}
 	
-	static Integer getId(String name) {
-		Integer id = nameIndex.get(name);
-		if (id == null) {
+	static int getId(String name) {
+		int id = 0;
+		if (!nameIndex.containsKey(name)) {
 			id = nameIndex.size();
 			nameIndex.put(name, id);
-			indexName.put(id, name);
-		}
+			indexName.put(id, name.getBytes());
+		} else
+			id = nameIndex.get(name);
 		return id;
 	}
 
 	static String getName(int id) {
-		return indexName.get(id);
+		return new String(indexName.get(id));
 	}
 
 	public void build(File dir) {
@@ -134,27 +136,27 @@ public class APIDictionary implements Serializable {
 	}
 
 	private void build(APIPackageNode pn) {
-		for (APIType type : pn.types.values()) {
+		for (APIType type : pn.types.values(new APIType[0])) {
 			build(type);
 			numOfTypes++;
 		}
-		for (APIPackageNode sub : pn.subPackages.values())
+		for (APIPackageNode sub : pn.subPackages.values(new APIPackageNode[0]))
 			build(sub);
 	}
 
 	private void build(APIType type) {
 		add(nameTypes, type.getNameId(), type);
-		for (Integer name : type.getMethods().keySet()) {
+		for (int name : type.getMethods().keys()) {
 			ArrayList<APIMethod> methods = type.getMethods().get(name);
 			add(nameMethods, name, methods);
 			numOfMethods += methods.size();
 		}
-		for (Integer name : type.getFields().keySet())
+		for (int name : type.getFields().keys())
 			add(nameFields, name, type.getFields().get(name));
 		numOfFields += type.getFields().size();
 	}
 	
-	private <E> void add(HashMap<Integer, HashSet<E>> map, Integer key, Collection<E> c) {
+	private <E> void add(TIntObjectHashMap<HashSet<E>> map, int key, Collection<E> c) {
 		HashSet<E> s = map.get(key);
 		if (s == null) {
 			s = new HashSet<>();
@@ -163,7 +165,7 @@ public class APIDictionary implements Serializable {
 		s.addAll(c);
 	}
 	
-	private <E> void add(HashMap<Integer, HashSet<E>> map, Integer key, E e) {
+	private <E> void add(TIntObjectHashMap<HashSet<E>> map, int key, E e) {
 		HashSet<E> s = map.get(key);
 		if (s == null) {
 			s = new HashSet<>();
@@ -218,46 +220,41 @@ public class APIDictionary implements Serializable {
 	}
 	
 	public HashSet<APIType> getTypesByName(String name) {
-		Integer key = nameIndex.get(name);
+		int key = nameIndex.get(name);
 		return this.nameTypes.get(key);
 	}
 	
 	public HashSet<APIMethod> getMethodsByName(String name) {
-		Integer key = nameIndex.get(name);
+		int key = nameIndex.get(name);
 		return this.nameMethods.get(key);
 	}
 	
 	public HashSet<APIField> getFieldsByName(String name) {
-		Integer key = nameIndex.get(name);
+		int key = nameIndex.get(name);
 		return this.nameFields.get(key);
 	}
 	
-	/**
-	 * @param name: fully qualified name of method
-	 * @return
-	 */
-	public APIType getReturnTypeByMethod(String name)
-	{
-		String methodName = name.substring(name.lastIndexOf('.')+1);
-		String fullName = name.substring(0, name.lastIndexOf('.'));
-		HashSet<APIMethod> methods = this.getMethodsByName(methodName);
-		for(APIMethod method: methods)
-		{
-			if(method.getType().getFQN().equals(fullName))
-			{
-				return method.getReturnType();
-			}
-		}
-		return null;
-	}
-	public HashSet<APIType> getTypesbyMethod(String name) 
-	{
+	public HashSet<APIType> getTypesbyMethod(String name) {
 		HashSet<APIType> types = new HashSet<APIType>();
 		HashSet<APIMethod> methods = this.getMethodsByName(name);
 		for(APIMethod method: methods)
-		{
 			types.add(method.getType());
-		}
 		return types;
+	}
+	
+	public HashSet<APIField> getFields(String className, String fieldName) {
+		HashSet<APIField> fields = new HashSet<>();
+		HashSet<APIType> types = getTypesByName(className);
+		for (APIType type : types)
+			fields.add(type.getField(fieldName));
+		return fields;
+	}
+	
+	public HashSet<APIMethod> getMethods(String className, String methodName) {
+		HashSet<APIMethod> methods = new HashSet<>();
+		HashSet<APIType> types = getTypesByName(className);
+		for (APIType type : types)
+			methods.addAll(type.getMethods(methodName));
+		return methods;
 	}
 }

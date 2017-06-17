@@ -82,10 +82,13 @@ public class TestDictionary {
     public void test2() throws Exception {
 		File in = new File("T:/type-resolution");
 		long beforeUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		long beforeTime = System.currentTimeMillis();
 		APIDictionary dict = new APIDictionary();
 		dict.build(in);
 		long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		long afterTime = System.currentTimeMillis();
 		System.out.println("Memory usage: " + (afterUsedMem - beforeUsedMem) / 1000 / 1000);
+		System.out.println("Time: " + (afterTime - beforeTime) / 1000);
 		System.out.println("Types: " + dict.getNumOfTypes());
 		System.out.println("Methods: " + dict.getNumOfMethods());
 		System.out.println("Fields: " + dict.getNumOfFields());
@@ -97,6 +100,26 @@ public class TestDictionary {
 		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.String.substring(1)(int,)"));
 		System.out.println(l = new ArrayList<APIElement>(dict.getFieldsByName("MAX_VALUE")));
 		Assert.assertThat(l, new APIElementListMatcher<ArrayList<APIElement>>("java.lang.Integer.MAX_VALUE"));
+	
+		Scanner scan = new Scanner(System.in);
+		while (true) {
+			String text = scan.nextLine();
+			String[] parts = text.split("\\s");
+			if (parts.length == 2) {
+				beforeTime = System.currentTimeMillis();
+				if (parts[0].equals("t"))
+					System.out.println(new ArrayList<APIType>(dict.getTypesByName(parts[1])));
+				else if (parts[0].equals("m"))
+					System.out.println(new ArrayList<APIMethod>(dict.getMethodsByName(parts[1])));
+				else if (parts[0].equals("f"))
+					System.out.println(new ArrayList<APIField>(dict.getFieldsByName(parts[1])));
+				afterTime = System.currentTimeMillis();
+				System.out.println("Time: " + (afterTime - beforeTime));
+			}
+			if (text.isEmpty())
+				break;
+		}
+		scan.close();
     }
 
     private static class APIElementListMatcher<T> extends BaseMatcher<T> {

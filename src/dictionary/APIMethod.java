@@ -9,7 +9,7 @@ public class APIMethod extends APIElement implements Serializable {
 	private APIType type, returnType;
 	private APIType[] parameterTypes;
 	
-	public APIMethod(Integer id, APIType type, APIType[] parameterTypes, APIType returnType) {
+	public APIMethod(int id, APIType type, APIType[] parameterTypes, APIType returnType) {
 		super(id);
 		this.type = type;
 		this.parameterTypes = parameterTypes;

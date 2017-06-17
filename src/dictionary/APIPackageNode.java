@@ -1,22 +1,22 @@
 package dictionary;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class APIPackageNode extends APIElement implements Serializable {
 	private static final long serialVersionUID = -654414935534276897L;
 	
 	APIPackageNode parent;
-	HashMap<Integer, APIPackageNode> subPackages = new HashMap<>();
-	HashMap<Integer, APIType> types = new HashMap<>();
+	TIntObjectHashMap<APIPackageNode> subPackages = new TIntObjectHashMap<>();
+	TIntObjectHashMap<APIType> types = new TIntObjectHashMap<>();
 	
-	public APIPackageNode(Integer id, APIPackageNode parent) {
+	public APIPackageNode(int id, APIPackageNode parent) {
 		super(id);
 		this.parent = parent;
 	}
 	
 	public APIPackageNode addSubPackage(String name) {
-		Integer id = APIDictionary.getId(name);
+		int id = APIDictionary.getId(name);
 		APIPackageNode sub = subPackages.get(id);
 		if (sub == null) {
 			sub = new APIPackageNode(id, this);
@@ -26,7 +26,7 @@ public class APIPackageNode extends APIElement implements Serializable {
 	}
 	
 	public APIType addType(String name) {
-		Integer id = APIDictionary.getId(name);
+		int id = APIDictionary.getId(name);
 		APIType type = types.get(id);
 		if (type == null) {
 			type = new APIType(id, this);

@@ -2,45 +2,53 @@ package dictionary;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class APIType extends APIElement implements Serializable {
 	private static final long serialVersionUID = -5790551948759393843L;
 	
 	private APIPackageNode packageNode;
-	private HashMap<Integer, APIField> fields = new HashMap<>();
-	private HashMap<Integer, ArrayList<APIMethod>> methods = new HashMap<>();
+	private TIntObjectHashMap<APIField> fields = new TIntObjectHashMap<>();
+	private TIntObjectHashMap<ArrayList<APIMethod>> methods = new TIntObjectHashMap<>();
 	
-	public APIType(Integer id, APIPackageNode packageNode) {
+	public APIType(int id, APIPackageNode packageNode) {
 		super(id);
 		this.packageNode = packageNode;
 	}
 
-	public HashMap<Integer, APIField> getFields() {
+	public TIntObjectHashMap<APIField> getFields() {
 		return fields;
 	}
 
-	public HashMap<Integer, ArrayList<APIMethod>> getMethods() {
+	public TIntObjectHashMap<ArrayList<APIMethod>> getMethods() {
 		return methods;
+	}
+	
+	public APIField getField(String name) {
+		return fields.get(APIDictionary.getId(name));
+	}
+	
+	public ArrayList<APIMethod> getMethods(String name) {
+		return methods.get(APIDictionary.getId(name));
 	}
 
 	public APIField addField(String name, APIType fieldType) {
-		Integer id = APIDictionary.getId(name);
-		APIField field = getFields().get(id);
+		int id = APIDictionary.getId(name);
+		APIField field = fields.get(id);
 		if (field == null) {
 			field = new APIField(id, this, fieldType);
-			getFields().put(id, field);
+			fields.put(id, field);
 		}
 		return field;
 	}
 
 	public APIMethod addMethod(String name, APIType[] parameterTypes, APIType returnType) {
 		String nameWithNumber = name + "(" + parameterTypes.length + ")";
-		Integer id = APIDictionary.getId(nameWithNumber);
-		ArrayList<APIMethod> ms = getMethods().get(id);
+		int id = APIDictionary.getId(nameWithNumber);
+		ArrayList<APIMethod> ms = methods.get(id);
 		if (ms == null) {
 			ms = new ArrayList<>();
-			getMethods().put(id, ms);
+			methods.put(id, ms);
 		}
 		for (APIMethod method : ms)
 			if (method.hasParameterTypes(parameterTypes))

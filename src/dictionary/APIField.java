@@ -7,7 +7,7 @@ public class APIField extends APIElement implements Serializable {
 	
 	private APIType type, returnType;
 	
-	public APIField(Integer id, APIType type, APIType returnType) {
+	public APIField(int id, APIType type, APIType returnType) {
 		super(id);
 		this.type = type;
 		this.returnType = returnType;
