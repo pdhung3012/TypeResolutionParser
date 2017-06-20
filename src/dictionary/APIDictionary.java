@@ -224,6 +224,26 @@ public class APIDictionary implements Serializable {
 		return this.nameTypes.get(key);
 	}
 	
+	/**
+	 * 
+	 * @param name the fully qualified name of a type
+	 * @return only single type
+	 */
+	public APIType getTypeByFullName(String name)
+	{
+		String simpleName = name.substring(name.lastIndexOf('.')+1);
+		//String fullName = name.substring(0, name.lastIndexOf('.'));
+		HashSet<APIType> types = this.getTypesByName(simpleName);
+		for(APIType type: types)
+		{
+			if(type.getFQN().equals(name))
+			{
+				return type;
+			}
+		}
+		return null;
+	}
+	
 	public HashSet<APIMethod> getMethodsByName(String name) {
 		int key = nameIndex.get(name);
 		return this.nameMethods.get(key);
@@ -236,7 +256,7 @@ public class APIDictionary implements Serializable {
 	
 	/**
 	 * @param name: fully qualified name of method
-	 * @return
+	 * @return only single type
 	 */
 	public APIType getReturnTypeByMethod(String name)
 	{

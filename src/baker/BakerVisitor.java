@@ -306,10 +306,47 @@ public class BakerVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(Assignment node) {
-		node.getLeftHandSide().accept(this);
+		Expression left = node.getLeftHandSide();
+		Expression right = node.getRightHandSide();
+		left.accept(this);
 		this.fullTokens.append(" = ");
 		this.partialTokens.append(" = ");
-		node.getRightHandSide().accept(this);
+		right.accept(this);
+		//variable = variable
+		if( left instanceof SimpleName )
+		{
+			String leftKey = ((SimpleName) left).getIdentifier().toString();
+			HashSet<APIType> leftList = candTypes.get(leftKey);
+			String rightKey;
+			//variable assigns to variable
+			if( right instanceof SimpleName)
+			{
+				rightKey =  ((SimpleName) right).getIdentifier().toString();
+				if ( candTypes.containsKey(rightKey) )
+				{
+					HashSet<APIType> rightList = candTypes.get(rightKey);
+					leftList.retainAll(rightList);
+					rightList.retainAll(leftList);
+					candTypes.put(leftKey, leftList);
+					candTypes.put(rightKey, rightList);
+					System.out.println("Key "+ leftKey + " and its candidate list: ");
+					for(APIType type: candTypes.get(leftKey))
+					{
+						System.out.print(type.toString() + ", ");
+					}
+					System.out.println();
+				}
+			}
+			
+			//variable assigns to methodInvocation
+			if( right instanceof MethodInvocation)
+			{
+				rightKey = ((MethodInvocation) right).getName().toString();
+			}
+			//variable assigns to fieldAccess
+			//variable assigns to 'new' keyword
+			//variable assigns to Literal -- not handling
+		}
 		return false;
 	}
 
@@ -576,7 +613,6 @@ public class BakerVisitor extends ASTVisitor {
 						{
 							APIType returnType = null;
 							//android.webkit.WebView.getSettings + abc.getSettings
-
 							String fullMethodName = type.getFQN() + "."+tempNode.getName().getIdentifier() + "(" + tempNode.arguments().size() + ")";
 							returnType = dictionary.getReturnTypeByMethod(fullMethodName);
 							if(receiver.contains(returnType))
@@ -597,8 +633,6 @@ public class BakerVisitor extends ASTVisitor {
 					}
 					HashSet<APIType> candidateList = candTypes.get(key);
 					String method = node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
-					System.out.println("key " + key);
-					System.out.println("method " + method);
 					HashSet<APIType> matchedType = dictionary.getTypesbyMethod(method);
 
 					if(!matchedType.isEmpty())
@@ -947,6 +981,7 @@ public class BakerVisitor extends ASTVisitor {
 		String utype = getUnresolvedType(node.getType()), rtype = getResolvedType(node.getType());
 		this.partialTokens.append(" " + utype + " ");
 		this.fullTokens.append(" " + rtype + " ");
+
 		for (int i = 0; i < node.fragments().size(); i++)
 			((ASTNode) node.fragments().get(i)).accept(this);
 		return false;
@@ -962,6 +997,7 @@ public class BakerVisitor extends ASTVisitor {
 		this.fullTokens.append(" " + rtype + " ");
 		for (int i = 0; i < node.fragments().size(); i++)
 			((ASTNode) node.fragments().get(i)).accept(this);
+
 		return false;
 	}
 
@@ -971,10 +1007,36 @@ public class BakerVisitor extends ASTVisitor {
 		String utype = getUnresolvedType(type), rtype = getResolvedType(type);
 		this.partialTokens.append(" " + utype + " ");
 		this.fullTokens.append(" " + rtype + " ");
+
+
 		if (node.getInitializer() != null) {
 			this.partialTokens.append("= ");
 			this.fullTokens.append("= ");
 			node.getInitializer().accept(this);
+		}
+		
+		String key = node.getName().toString();
+		if(!candTypes.containsKey(key))
+		{
+			System.out.println(type.toString());
+			HashSet<APIType> candList = dictionary.getTypesByName(type.toString());
+			if(candList != null)
+			{
+				candTypes.put(key, candList);
+			}
+			else
+			{
+				if(type.toString().contains("."))
+				{
+					candList = new HashSet<APIType>();
+					candList.add(dictionary.getTypeByFullName(type.toString()));
+					candTypes.put(key, candList);
+				}
+				else
+				{
+					candTypes.put(key, new HashSet<APIType>());
+				}
+			}
 		}
 		return false;
 	}

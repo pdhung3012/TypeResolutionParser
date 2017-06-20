@@ -40,7 +40,7 @@ public class BakerSequencesGenerator {
 	
 	public BakerSequencesGenerator(String inPath) {
 		this.inPath = inPath;
-		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\test"));
+		dictionary.build(new File("resources\\mockDictionary"));
 	}
 	
 	public BakerSequencesGenerator(String inPath, boolean testing) {
