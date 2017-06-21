@@ -201,7 +201,7 @@ public class ClassPathUtil {
 		return values;
 	}
 	
-	static class PomFile {
+	public static class PomFile {
 		private String id;
 		private PomFile parent;
 		HashMap<String, String> properties = new HashMap<>();
