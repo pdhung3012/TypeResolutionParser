@@ -13,6 +13,7 @@ public class BakerVisitor extends ASTVisitor {
 	public HashMap<String, HashSet<APIType>> candTypes;
 	public HashMap<String, HashSet<APIMethod>> candMethods;
 	public HashMap<String, HashSet<APIField>> candFields;
+	public HashMap<String, String> trueTypes;
 	private APIDictionary dictionary;
 	private String className, superClassName;
 	private int numOfExpressions = 0, numOfResolvedExpressions = 0;
@@ -21,13 +22,12 @@ public class BakerVisitor extends ASTVisitor {
 	private String[] fullSequenceTokens, partialSequenceTokens;
 
 
-	public BakerVisitor(String className, String superClassName, HashMap<String, HashSet<APIType>> candTypes, HashMap<String, HashSet<APIMethod>> candMethods, HashMap<String, HashSet<APIField>> candFields, APIDictionary dictionary) {
+	public BakerVisitor(String className, String superClassName, HashMap<String, HashSet<APIType>> candTypes, HashMap<String, String> trueTypes, APIDictionary dictionary) {
 		super(false);
 		this.className = className;
 		this.superClassName = superClassName;
 		this.candTypes = candTypes;
-		this.candMethods = candMethods;
-		this.candFields = candFields;
+		this.trueTypes = trueTypes;
 		this.dictionary = dictionary;
 	}
 
@@ -325,6 +325,8 @@ public class BakerVisitor extends ASTVisitor {
 				if ( candTypes.containsKey(rightKey) )
 				{
 					HashSet<APIType> rightList = candTypes.get(rightKey);
+					if(leftList!= null && rightList != null)
+					{
 					leftList.retainAll(rightList);
 					rightList.retainAll(leftList);
 					candTypes.put(leftKey, leftList);
@@ -335,6 +337,7 @@ public class BakerVisitor extends ASTVisitor {
 						System.out.print(type.toString() + ", ");
 					}
 					System.out.println();
+					}
 				}
 			}
 			
@@ -601,6 +604,8 @@ public class BakerVisitor extends ASTVisitor {
 					//Visit from left to right
 					tempNode.accept(this);
 					//Parent receiver
+					if (tempNode.getExpression() != null)
+					{
 					String subkey =  tempNode.getExpression().toString();	
 					//Parent method
 					String tempMethod = node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
@@ -623,6 +628,7 @@ public class BakerVisitor extends ASTVisitor {
 						//Update candidate List
 						candTypes.put(subkey, candidateList);
 					}
+					}
 				}
 				else
 				{
@@ -630,12 +636,26 @@ public class BakerVisitor extends ASTVisitor {
 					{
 						HashSet<APIType> candidateList = dictionary.getTypesByName(key);
 						candTypes.put(key, candidateList);
+						if (!trueTypes.containsKey(key))
+						{
+							String value = "";
+							if(node.getExpression().resolveTypeBinding() != null)
+							{
+								value = node.getExpression().resolveTypeBinding().getQualifiedName();
+							}
+							else
+							{
+								System.out.println("Cant resolve " + key);
+							}
+							trueTypes.put(key, value);
+						}
 					}
 					HashSet<APIType> candidateList = candTypes.get(key);
 					String method = node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
+					System.out.println("Method: " + method);
 					HashSet<APIType> matchedType = dictionary.getTypesbyMethod(method);
 
-					if(!matchedType.isEmpty())
+					if(matchedType != null)
 					{
 						if(candidateList == null)
 						{
@@ -646,14 +666,17 @@ public class BakerVisitor extends ASTVisitor {
 							candidateList.retainAll(matchedType);
 						}
 					}
+					//Update candidate types with new candidate list
 					candTypes.put(key, candidateList);
 					node.getExpression().accept(this);
+					if(candTypes.get(key) != null){
 					System.out.println("Key "+ key + " and its candidate list: ");
 					for(APIType type: candTypes.get(key))
 					{
 						System.out.print(type.toString() + ", ");
 					}
 					System.out.println();
+					}
 				}
 			} 
 			else 
@@ -1004,6 +1027,7 @@ public class BakerVisitor extends ASTVisitor {
 	@Override
 	public boolean visit(VariableDeclarationFragment node) {
 		Type type = getType(node);
+		
 		String utype = getUnresolvedType(type), rtype = getResolvedType(type);
 		this.partialTokens.append(" " + utype + " ");
 		this.fullTokens.append(" " + rtype + " ");
@@ -1018,7 +1042,6 @@ public class BakerVisitor extends ASTVisitor {
 		String key = node.getName().toString();
 		if(!candTypes.containsKey(key))
 		{
-			System.out.println(type.toString());
 			HashSet<APIType> candList = dictionary.getTypesByName(type.toString());
 			if(candList != null)
 			{
@@ -1037,6 +1060,33 @@ public class BakerVisitor extends ASTVisitor {
 					candTypes.put(key, new HashSet<APIType>());
 				}
 			}
+			if(candList != null)
+			{
+			System.out.println("Key "+ key + " and its candidate list: ");
+			for(APIType type1: candTypes.get(key))
+			{
+				if(type1 != null){
+				System.out.print(type1.toString() + ", ");}
+			}
+			System.out.println();
+			}
+		}
+		if (!trueTypes.containsKey(key))
+		{
+			String value = "";
+			trueTypes.put(key, value);
+
+			
+			if(node.getName().resolveTypeBinding() != null)
+			{
+				value = node.getName().resolveTypeBinding().getQualifiedName();
+			}
+			else
+			{
+				System.out.println("Cant resolve " + key);
+			}
+			trueTypes.put(key, value);
+		
 		}
 		return false;
 	}

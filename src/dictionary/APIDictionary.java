@@ -276,9 +276,16 @@ public class APIDictionary implements Serializable {
 	public HashSet<APIType> getTypesbyMethod(String name) {
 		HashSet<APIType> types = new HashSet<APIType>();
 		HashSet<APIMethod> methods = this.getMethodsByName(name);
+		if (methods != null)
+		{
 		for(APIMethod method: methods)
 			types.add(method.getType());
 		return types;
+		}
+		else
+		{
+			return null;
+		}
 	}
 	
 	public HashSet<APIField> getFields(String className, String fieldName) {

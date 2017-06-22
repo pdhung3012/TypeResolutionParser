@@ -56,6 +56,7 @@ public class TestSequenceGenerator {
 //		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("F:/github/repos-IntelliJ/JetBrains/intellij-community", true);
 //		ProjectSequencesGenerator psg = new ProjectSequencesGenerator("G:/github/repos-5stars-50commits/apache/camel", true);
 		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study/Research/Re-implement LiveAPI/TypeResolutionParser/resources/testInput", true);
+//		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle-master\\src\\androidExamples", true);
 		psg.generateSequences("F:/Study/Research/Re-implement LiveAPI/sequences");
 //		psg.updateTokens();
 		int[] numbers = psg.generateAlignment(true);
