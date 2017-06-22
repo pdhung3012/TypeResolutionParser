@@ -29,6 +29,7 @@ import utils.FileUtil;
 import dictionary.*;
 public class BakerSequencesGenerator {
 	public HashMap<String, HashSet<APIType>> candTypes = new HashMap<String, HashSet<APIType>>();
+	public HashMap<String, String> trueTypes = new HashMap();
 	public HashMap<String, HashSet<APIMethod>> candMethods = new HashMap<String, HashSet<APIMethod>>();
 	public HashMap<String, HashSet<APIField>> candFields = new HashMap<String, HashSet<APIField>>();
 	private static final boolean PARSE_INDIVIDUAL_SRC = false, SCAN_FILES_FRIST = false;
@@ -40,6 +41,7 @@ public class BakerSequencesGenerator {
 	
 	public BakerSequencesGenerator(String inPath) {
 		this.inPath = inPath;
+//		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
 		dictionary.build(new File("resources\\mockDictionary"));
 	}
 	
@@ -210,7 +212,7 @@ public class BakerSequencesGenerator {
 			superClassName = BakerVisitor.getUnresolvedType(td.getSuperclassType());
 		for (MethodDeclaration method : td.getMethods()) {
 			stLog.println(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method));
-			BakerVisitor sg = new BakerVisitor(className, superClassName, candTypes, candMethods, candFields, dictionary);
+			BakerVisitor sg = new BakerVisitor(className, superClassName, candTypes, trueTypes, dictionary);
 			method.accept(sg);
 			int numofExpressions = sg.getNumOfExpressions(), numOfResolvedExpressions = sg.getNumOfResolvedExpressions();
 			String source = sg.getPartialSequence(), target = sg.getFullSequence();

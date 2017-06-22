@@ -1,4 +1,8 @@
 package testInput;
+
+import com.google.android.maps.MapView;
+import gen.R;
+
 public class Test2 extends Activity 
 {
 	@Override
@@ -14,5 +18,6 @@ public class Test2 extends Activity
 		Char c;
 		String d = "abc";
 		c = d.getIndexOf(0);
+		MapView myMapView = (MapView) findViewById(R.id.lay);
 	}
 }
