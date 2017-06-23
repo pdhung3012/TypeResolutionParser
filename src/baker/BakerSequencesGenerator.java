@@ -38,11 +38,13 @@ public class BakerSequencesGenerator {
 	private boolean testing = false;
 	private PrintStream stLocations, stSourceSequences, stTargetSequences, stLog;
 	private HashSet<String> badFiles = new HashSet<>();
-
+	int truePositive = 0;
+	int falsePositive = 0;
+	int falseNegative = 0;
 	public BakerSequencesGenerator(String inPath) {
 		this.inPath = inPath;
-		//		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
-		dictionary.build(new File("resources\\mockDictionary"));
+				dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
+//		dictionary.build(new File("resources\\mockDictionary"));
 	}
 
 	public BakerSequencesGenerator(String inPath, boolean testing) {
@@ -139,6 +141,7 @@ public class BakerSequencesGenerator {
 					numOfSequences += generateSequence(keepUnresolvables, lib, td, sourceFilePath, ast.getPackage().getName().getFullyQualifiedName(), "");
 				}
 			}
+			System.out.println("TP: " + truePositive + ", FP: " + falsePositive + ", FN: " + falseNegative);
 		}
 	}
 
@@ -206,9 +209,6 @@ public class BakerSequencesGenerator {
 
 	private int generateSequence(boolean keepUnresolvables, String lib, TypeDeclaration td, String path, String packageName, String outer) {
 		int numOfSequences = 0;
-		int truePositive = 0;
-		int falsePositive = 0;
-		int falseNegative = 0;
 		String name = outer.isEmpty() ? td.getName().getIdentifier() : outer + "." + td.getName().getIdentifier();
 		String className = td.getName().getIdentifier(), superClassName = null;
 		if (td.getSuperclassType() != null)
@@ -222,7 +222,7 @@ public class BakerSequencesGenerator {
 				String trueType = trueTypes.get(key);
 				if (!trueType.isEmpty())
 				{
-					if ( !candTypes.get(key).isEmpty())
+					if ( candTypes.get(key) != null)
 					{
 						if (candTypes.get(key).size() == 1)
 						{
@@ -230,7 +230,8 @@ public class BakerSequencesGenerator {
 
 							for (APIType type: candTypes.get(key))
 							{
-								guess = type.getFQN();
+								if(type != null){
+								guess = type.getFQN();}
 							}
 							System.out.println("Key " + key + ", guess type: " + guess + ", true type: "+ trueType);
 							if (guess.equals(trueType) )
@@ -249,7 +250,7 @@ public class BakerSequencesGenerator {
 					}
 				}
 			}
-			System.out.println("TP: " + truePositive + ", FP: " + falsePositive + ", FN: " + falseNegative);
+			
 			int numofExpressions = sg.getNumOfExpressions(), numOfResolvedExpressions = sg.getNumOfResolvedExpressions();
 			String source = sg.getPartialSequence(), target = sg.getFullSequence();
 			String[] sTokens = sg.getPartialSequenceTokens(), tTokens = sg.getFullSequenceTokens();

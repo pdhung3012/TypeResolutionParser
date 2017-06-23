@@ -25,7 +25,12 @@ public class TestSequenceGenerator {
 
 	void test() {
 //		BakerSequencesGenerator psg = new BakerSequencesGenerator("resources/testInput", true);
-		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\src\\androidExamples\\Android39.java", true);
+//		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\src\\androidExamples\\", true);
+//		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\src\\gwt\\", true);
+//		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\src\\hibernate\\", true);
+		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\src\\jodatime\\", true);
+//		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\src\\xtream\\", true);
+//		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\src\\common_JDK\\", true);
 		psg.generateSequences("F:/Study/Research/Re-implement LiveAPI/sequences");
 //		psg.updateTokens();
 		int[] numbers = psg.generateAlignment(true);

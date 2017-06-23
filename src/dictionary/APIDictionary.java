@@ -263,13 +263,18 @@ public class APIDictionary implements Serializable {
 		String methodName = name.substring(name.lastIndexOf('.')+1);
 		String fullName = name.substring(0, name.lastIndexOf('.'));
 		HashSet<APIMethod> methods = this.getMethodsByName(methodName);
+		if(methods == null)
+		{
+			return null;
+		}
+		else{
 		for(APIMethod method: methods)
 		{
 			if(method.getType().getFQN().equals(fullName))
 			{
 				return method.getReturnType();
 			}
-		}
+		}}
 		return null;
 	}
 	
