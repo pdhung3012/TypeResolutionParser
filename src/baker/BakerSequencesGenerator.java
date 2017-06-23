@@ -38,13 +38,13 @@ public class BakerSequencesGenerator {
 	private boolean testing = false;
 	private PrintStream stLocations, stSourceSequences, stTargetSequences, stLog;
 	private HashSet<String> badFiles = new HashSet<>();
-	
+
 	public BakerSequencesGenerator(String inPath) {
 		this.inPath = inPath;
-//		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
+		//		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
 		dictionary.build(new File("resources\\mockDictionary"));
 	}
-	
+
 	public BakerSequencesGenerator(String inPath, boolean testing) {
 		this(inPath);
 		this.testing = testing;
@@ -56,9 +56,9 @@ public class BakerSequencesGenerator {
 
 	public int generateSequences(final boolean keepUnresolvables, final String lib, final String outPath) {
 		this.outPath = outPath;
-		String[] jarPaths = getJarPaths();
+		HashSet<String> jarPaths = new HashSet();
 		ArrayList<String> rootPaths = getRootPaths();
-		
+		getSourcePaths(new File("F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\lib"), jarPaths, ".jar");
 		new File(outPath).mkdirs();
 		try {
 			stLocations = new PrintStream(new FileOutputStream(outPath + "/locations.txt"));
@@ -73,7 +73,7 @@ public class BakerSequencesGenerator {
 		int numOfSequences = 0;
 		for (String rootPath : rootPaths) {
 			String[] sourcePaths = getSourcePaths(rootPath, new String[]{".java"});
-			
+
 			@SuppressWarnings("rawtypes")
 			Map options = JavaCore.getOptions();
 			options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
@@ -81,10 +81,10 @@ public class BakerSequencesGenerator {
 			options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_8);
 			ASTParser parser = ASTParser.newParser(AST.JLS8);
 			parser.setCompilerOptions(options);
-			parser.setEnvironment(jarPaths, new String[]{}, new String[]{}, true);
+			parser.setEnvironment(jarPaths.toArray(new String[0]), new String[]{}, new String[]{}, true);
 			parser.setResolveBindings(true);
 			parser.setBindingsRecovery(false);
-			
+
 			StatTypeFileASTRequestor r = new StatTypeFileASTRequestor(keepUnresolvables, lib);
 			try {
 				parser.createASTs(sourcePaths, null, new String[0], r, null);
@@ -99,12 +99,12 @@ public class BakerSequencesGenerator {
 		}
 		return numOfSequences;
 	}
-	
+
 	private class StatTypeFileASTRequestor extends FileASTRequestor {
 		int numOfSequences = 0;
 		private boolean keepUnresolvables;
 		private String lib;
-		
+
 		public StatTypeFileASTRequestor(boolean keepUnresolvables, String lib) {
 			this.keepUnresolvables = keepUnresolvables;
 			this.lib = lib;
@@ -206,6 +206,9 @@ public class BakerSequencesGenerator {
 
 	private int generateSequence(boolean keepUnresolvables, String lib, TypeDeclaration td, String path, String packageName, String outer) {
 		int numOfSequences = 0;
+		int truePositive = 0;
+		int falsePositive = 0;
+		int falseNegative = 0;
 		String name = outer.isEmpty() ? td.getName().getIdentifier() : outer + "." + td.getName().getIdentifier();
 		String className = td.getName().getIdentifier(), superClassName = null;
 		if (td.getSuperclassType() != null)
@@ -214,6 +217,39 @@ public class BakerSequencesGenerator {
 			stLog.println(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method));
 			BakerVisitor sg = new BakerVisitor(className, superClassName, candTypes, trueTypes, dictionary);
 			method.accept(sg);
+			for (String key : trueTypes.keySet())
+			{
+				String trueType = trueTypes.get(key);
+				if (!trueType.isEmpty())
+				{
+					if ( !candTypes.get(key).isEmpty())
+					{
+						if (candTypes.get(key).size() == 1)
+						{
+							String guess = "";
+
+							for (APIType type: candTypes.get(key))
+							{
+								guess = type.getFQN();
+							}
+							System.out.println("Key " + key + ", guess type: " + guess + ", true type: "+ trueType);
+							if (guess.equals(trueType) )
+							{
+								truePositive++;
+							}
+							else
+							{
+								falsePositive++;
+							}
+						}
+					}
+					else
+					{
+						falseNegative ++;
+					}
+				}
+			}
+			System.out.println("TP: " + truePositive + ", FP: " + falsePositive + ", FN: " + falseNegative);
 			int numofExpressions = sg.getNumOfExpressions(), numOfResolvedExpressions = sg.getNumOfResolvedExpressions();
 			String source = sg.getPartialSequence(), target = sg.getFullSequence();
 			String[] sTokens = sg.getPartialSequenceTokens(), tTokens = sg.getFullSequenceTokens();
@@ -231,11 +267,11 @@ public class BakerSequencesGenerator {
 					}
 				}
 				if (hasLib) {
-//					this.locations.add(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%");
-//					this.sourceSequences.add(source);
-//					this.targetSequences.add(target);
-//					this.sourceSequenceTokens.add(sTokens);
-//					this.targetSequenceTokens.add(tTokens);
+					//					this.locations.add(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%");
+					//					this.sourceSequences.add(source);
+					//					this.targetSequences.add(target);
+					//					this.sourceSequenceTokens.add(sTokens);
+					//					this.targetSequenceTokens.add(tTokens);
 					stLocations.print(path + "\t" + packageName + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method) + "\t" + numofExpressions + "\t" + numOfResolvedExpressions + "\t" + (numOfResolvedExpressions * 100 / numofExpressions) + "%" + "\n");
 					stSourceSequences.print(source + "\n");
 					stTargetSequences.print(target + "\n");
@@ -247,8 +283,8 @@ public class BakerSequencesGenerator {
 					throw new AssertionError("Source and target sequences do not have the same length!");
 				for (int j = 0; j < sTokens.length; j++) {
 					String s = sTokens[j], t = tTokens[j];
-//					if (!t.equals(s) && !t.endsWith(s))
-//					if (t.length() < s.length())
+					//					if (!t.equals(s) && !t.endsWith(s))
+					//					if (t.length() < s.length())
 					if (!t.contains(".") && !s.contains(".") && !t.equals(s))
 						throw new AssertionError("Corresponding source and target tokens do not match!");
 				}
@@ -296,56 +332,15 @@ public class BakerSequencesGenerator {
 		return name.substring(index);
 	}
 
-	private String[] getJarPaths() {
-		HashMap<String, File> jarFiles = new HashMap<>();
-		HashSet<String> globalRepoLinks = new HashSet<>();
-		globalRepoLinks.add("http://central.maven.org/maven2/");
-		HashMap<String, String> globalProperties = new HashMap<>();
-		HashMap<String, String> globalManagedDependencies = new HashMap<>();
-		Stack<ClassPathUtil.PomFile> parentPomFiles = new Stack<>();
-		getJarFiles(new File(inPath), jarFiles, globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
-		String[] paths = new String[jarFiles.size()];
-		int i = 0;
-		for (File file : jarFiles.values())
-			paths[i++] = file.getAbsolutePath();
-		return paths;
+	private void getSourcePaths(File file, HashSet<String> paths, String ext) {
+		if (file.isDirectory()) {
+			for (File sub : file.listFiles())
+				getSourcePaths(sub, paths, ext);
+		} else if (ext.equals(getExtension(file.getName())))
+			paths.add(file.getAbsolutePath());
 	}
 
-	private void getJarFiles(File file, HashMap<String, File> jarFiles, 
-			HashSet<String> globalRepoLinks, HashMap<String, String> globalProperties, HashMap<String, String> globalManagedDependencies,
-			Stack<PomFile> parentPomFiles) {
-		if (file.isDirectory()) {
-			int size = parentPomFiles.size();
-			ArrayList<File> dirs = new ArrayList<>();
-			for (File sub : file.listFiles()) {
-				if (sub.isDirectory())
-					dirs.add(sub);
-				else
-					getJarFiles(sub, jarFiles, globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
-			}
-			for (File dir : dirs)
-				getJarFiles(dir, jarFiles, globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
-			if (parentPomFiles.size() > size)
-				parentPomFiles.pop();
-		} else if (file.getName().endsWith(".jar")) {
-			File f = jarFiles.get(file.getName());
-			if (f == null || file.lastModified() > f.lastModified())
-				jarFiles.put(file.getName(), file);
-		} else if (file.getName().equals("build.gradle")) {
-			try {
-				ClassPathUtil.getGradleDependencies(file, this.inPath + "/lib");
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}
-		} else if (file.getName().equals("pom.xml")) {
-			try {
-				ClassPathUtil.getPomDependencies(file, this.inPath + "/lib", globalRepoLinks, globalProperties, globalManagedDependencies, parentPomFiles);
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}
-		}
-	}
-	
+
 	/**
 	 * 
 	 * @param inPath
@@ -355,11 +350,11 @@ public class BakerSequencesGenerator {
 	 * 			numbers[2]: number of sequences with non-aligned tokens;
 	 * 			numbers[3]: number of non-aligned tokens 
 	 */
-	
+
 	public int[] generateAlignment(boolean doVerify) {
 		return generateAlignment(outPath, doVerify);
 	}
-	
+
 	/**
 	 * 
 	 * @param inPath
@@ -376,7 +371,7 @@ public class BakerSequencesGenerator {
 		if (doVerify)
 			if (sourceSequences.size() != targetSequences.size()) {
 				numbers[0]++;
-//				throw new AssertionError("Numbers of source and target sequences are not the same!!!");
+				//				throw new AssertionError("Numbers of source and target sequences are not the same!!!");
 			}
 		File dir = new File(inPath + "-alignment");
 		if (!dir.exists())
@@ -400,7 +395,7 @@ public class BakerSequencesGenerator {
 			if (doVerify) {
 				if (sTokens.length != tTokens.length) {
 					numbers[1]++;
-//					throw new AssertionError("Lengths of source and target sequences are not the same!!!");
+					//					throw new AssertionError("Lengths of source and target sequences are not the same!!!");
 				}
 				boolean aligned = true;
 				for (int j = 0; j < sTokens.length; j++) {
@@ -408,7 +403,7 @@ public class BakerSequencesGenerator {
 					if ((t.contains(".") && !t.substring(t.lastIndexOf('.')+1).equals(s.substring(s.lastIndexOf('.')+1))) || (!t.contains(".") && !t.equals(s))) {
 						numbers[3]++;
 						aligned = false;
-//						throw new AssertionError("Source and target are not aligned!!!");
+						//						throw new AssertionError("Source and target are not aligned!!!");
 					}
 				}
 				if (!aligned)
@@ -434,7 +429,7 @@ public class BakerSequencesGenerator {
 		}
 		return numbers;
 	}
-	
+
 	/**
 	 * 
 	 * @param inPath
@@ -451,7 +446,7 @@ public class BakerSequencesGenerator {
 		if (doVerify)
 			if (sourceSequences.size() != targetSequences.size()) {
 				numbers[0]++;
-//				throw new AssertionError("Numbers of source and target sequences are not the same!!!");
+				//				throw new AssertionError("Numbers of source and target sequences are not the same!!!");
 			}
 		File dir = new File(inPath + "-alignment");
 		if (!dir.exists())
@@ -475,7 +470,7 @@ public class BakerSequencesGenerator {
 			if (doVerify) {
 				if (sTokens.length != tTokens.length) {
 					numbers[1]++;
-//					throw new AssertionError("Lengths of source and target sequences are not the same!!!");
+					//					throw new AssertionError("Lengths of source and target sequences are not the same!!!");
 				}
 				boolean aligned = true;
 				for (int j = 0; j < sTokens.length; j++) {
@@ -483,7 +478,7 @@ public class BakerSequencesGenerator {
 					if ((t.contains(".") && !t.substring(t.lastIndexOf('.')+1).equals(s.substring(s.lastIndexOf('.')+1))) || (!t.contains(".") && !t.equals(s))) {
 						numbers[3]++;
 						aligned = false;
-//						throw new AssertionError("Source and target are not aligned!!!");
+						//						throw new AssertionError("Source and target are not aligned!!!");
 					}
 				}
 				if (!aligned)
@@ -511,7 +506,7 @@ public class BakerSequencesGenerator {
 		targetSequences.clear();
 		return numbers;
 	}
-	
+
 	private static String generateAlignment(String[] tokens) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("NULL ({  })");

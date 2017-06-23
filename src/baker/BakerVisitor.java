@@ -1027,7 +1027,6 @@ public class BakerVisitor extends ASTVisitor {
 	@Override
 	public boolean visit(VariableDeclarationFragment node) {
 		Type type = getType(node);
-		
 		String utype = getUnresolvedType(type), rtype = getResolvedType(type);
 		this.partialTokens.append(" " + utype + " ");
 		this.fullTokens.append(" " + rtype + " ");
@@ -1074,12 +1073,10 @@ public class BakerVisitor extends ASTVisitor {
 		if (!trueTypes.containsKey(key))
 		{
 			String value = "";
-			trueTypes.put(key, value);
-
-			
-			if(node.getName().resolveTypeBinding() != null)
+			if(node.resolveBinding() != null)
 			{
-				value = node.getName().resolveTypeBinding().getQualifiedName();
+				value = node.resolveBinding().getType().getQualifiedName();
+				System.out.println("True type for key " + key + " is " + value);
 			}
 			else
 			{
