@@ -646,13 +646,15 @@ public class BakerVisitor extends ASTVisitor {
 							if(node.getExpression().resolveTypeBinding() != null)
 							{
 								value = node.getExpression().resolveTypeBinding().getQualifiedName();
+								if(!node.getExpression().resolveTypeBinding().isPrimitive())
+								{trueTypes.put(key, value);}
 							}
 							else
 							{
 								if(testing){
 									System.out.println("Cant resolve " + key);}
 							}
-							trueTypes.put(key, value);
+
 						}
 					}
 					HashSet<APIType> candidateList = candTypes.get(key);
@@ -1081,14 +1083,16 @@ public class BakerVisitor extends ASTVisitor {
 			String value = "";
 			if(node.resolveBinding() != null)
 			{
-				value = node.resolveBinding().getType().getQualifiedName();
+				value = node.resolveBinding().getType().getTypeDeclaration().getQualifiedName();
 				if(testing){System.out.println("True type for key " + key + " is " + value);}
+				if(! node.resolveBinding().getType().isPrimitive()){
+					trueTypes.put(key, value);}
 			}
 			else
 			{
 				if(testing){System.out.println("Cant resolve " + key);}
 			}
-			trueTypes.put(key, value);
+
 
 		}
 		return false;

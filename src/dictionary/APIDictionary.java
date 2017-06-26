@@ -234,13 +234,14 @@ public class APIDictionary implements Serializable {
 		String simpleName = name.substring(name.lastIndexOf('.')+1);
 		//String fullName = name.substring(0, name.lastIndexOf('.'));
 		HashSet<APIType> types = this.getTypesByName(simpleName);
+		if (types != null){
 		for(APIType type: types)
 		{
 			if(type.getFQN().equals(name))
 			{
 				return type;
 			}
-		}
+		}}
 		return null;
 	}
 	

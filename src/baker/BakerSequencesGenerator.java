@@ -40,15 +40,18 @@ public class BakerSequencesGenerator {
 	private HashSet<String> badFiles = new HashSet<>();
 	int truePositive = 0;
 	int falsePositive = 0;
-	int falseNegative = 0;
+	int falseNegative = 0; //Only single cardinality
+	int fN = 0; //Count multiple cardinality
+	private String jarPath;
 	public BakerSequencesGenerator(String inPath) {
 		this.inPath = inPath;
-				dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
+		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
 //		dictionary.build(new File("resources\\mockDictionary"));
 	}
 
-	public BakerSequencesGenerator(String inPath, boolean testing) {
+	public BakerSequencesGenerator(String inPath, String jarPath, boolean testing) {
 		this(inPath);
+		this.jarPath = jarPath;
 		this.testing = testing;
 	}
 
@@ -60,7 +63,7 @@ public class BakerSequencesGenerator {
 		this.outPath = outPath;
 		HashSet<String> jarPaths = new HashSet();
 		ArrayList<String> rootPaths = getRootPaths();
-		getSourcePaths(new File("F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\lib"), jarPaths, ".jar");
+		getSourcePaths(new File(jarPath), jarPaths, ".jar");
 		new File(outPath).mkdirs();
 		try {
 			stLocations = new PrintStream(new FileOutputStream(outPath + "/locations.txt"));
@@ -134,6 +137,7 @@ public class BakerSequencesGenerator {
 			}
 			if (testing)
 				System.out.println(sourceFilePath);
+				
 			stLog.println(sourceFilePath);
 			for (int i = 0; i < ast.types().size(); i++) {
 				if (ast.types().get(i) instanceof TypeDeclaration) {
@@ -141,7 +145,45 @@ public class BakerSequencesGenerator {
 					numOfSequences += generateSequence(keepUnresolvables, lib, td, sourceFilePath, ast.getPackage().getName().getFullyQualifiedName(), "");
 				}
 			}
-			System.out.println("TP: " + truePositive + ", FP: " + falsePositive + ", FN: " + falseNegative);
+			for (String key : trueTypes.keySet())
+			{
+				String trueType = trueTypes.get(key);
+				if (!trueType.isEmpty())
+				{
+					if ( candTypes.get(key) != null)
+					{
+						if (candTypes.get(key).size() == 1)
+						{
+							String guess = "";
+							for (APIType type: candTypes.get(key))
+							{
+								if(type != null){
+								guess = type.getFQN();}
+							}
+							System.out.println("Key " + key + ", guess type: " + guess + ", true type: "+ trueType);
+							if (guess.equals(trueType) )
+							{
+								truePositive++;
+							}
+							else
+							{
+								falsePositive++;
+							}
+						}
+						else
+						{
+							fN++;
+						}
+					}
+					else
+					{
+						falseNegative ++;
+					}
+				}
+			}
+			System.out.println("TP: " + truePositive + ", FP: " + falsePositive + ", FN: " + falseNegative + ",FN2: " + fN);
+			candTypes.clear();
+			trueTypes.clear();
 		}
 	}
 
@@ -217,39 +259,7 @@ public class BakerSequencesGenerator {
 			stLog.println(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method));
 			BakerVisitor sg = new BakerVisitor(className, superClassName, candTypes, trueTypes, dictionary);
 			method.accept(sg);
-			for (String key : trueTypes.keySet())
-			{
-				String trueType = trueTypes.get(key);
-				if (!trueType.isEmpty())
-				{
-					if ( candTypes.get(key) != null)
-					{
-						if (candTypes.get(key).size() == 1)
-						{
-							String guess = "";
-
-							for (APIType type: candTypes.get(key))
-							{
-								if(type != null){
-								guess = type.getFQN();}
-							}
-							System.out.println("Key " + key + ", guess type: " + guess + ", true type: "+ trueType);
-							if (guess.equals(trueType) )
-							{
-								truePositive++;
-							}
-							else
-							{
-								falsePositive++;
-							}
-						}
-					}
-					else
-					{
-						falseNegative ++;
-					}
-				}
-			}
+			
 			
 			int numofExpressions = sg.getNumOfExpressions(), numOfResolvedExpressions = sg.getNumOfResolvedExpressions();
 			String source = sg.getPartialSequence(), target = sg.getFullSequence();
