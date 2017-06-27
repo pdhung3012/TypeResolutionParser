@@ -170,9 +170,20 @@ public class BakerSequencesGenerator {
 								falsePositive++;
 							}
 						}
+						else if (candTypes.get(key).size() == 0)
+						{
+							falseNegative++;
+							System.out.println("Key FN empty "+ key);
+						}
 						else
 						{
 							fN++;
+							System.out.println("Key FN with cardinatlity > 1 "+ key + " and its candidate list: ");
+							for(APIType type: candTypes.get(key))
+							{
+								System.out.print(type.toString() + ", ");
+							}
+							System.out.println();
 						}
 					}
 					else

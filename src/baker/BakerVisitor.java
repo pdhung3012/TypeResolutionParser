@@ -20,7 +20,7 @@ public class BakerVisitor extends ASTVisitor {
 	private StringBuilder fullTokens = new StringBuilder(), partialTokens = new StringBuilder();
 	private String fullSequence = null, partialSequence = null;
 	private String[] fullSequenceTokens, partialSequenceTokens;
-	private boolean testing = false;
+	private boolean testing = true;
 
 	public BakerVisitor(String className, String superClassName, HashMap<String, HashSet<APIType>> candTypes, HashMap<String, String> trueTypes, APIDictionary dictionary) {
 		super(false);
@@ -321,6 +321,7 @@ public class BakerVisitor extends ASTVisitor {
 			//variable assigns to variable
 			if( right instanceof SimpleName)
 			{
+				System.out.println("blablabalbalabl");
 				rightKey =  ((SimpleName) right).getIdentifier().toString();
 				if ( candTypes.containsKey(rightKey) )
 				{
@@ -634,7 +635,7 @@ public class BakerVisitor extends ASTVisitor {
 						}
 					}
 				}
-				else
+				else //Single method invocation
 				{
 					if (!candTypes.containsKey(key))
 					{
@@ -685,6 +686,48 @@ public class BakerVisitor extends ASTVisitor {
 							}
 							System.out.println();
 						}}
+					
+					//Deductive Linking through argument
+					for (int i = 0; i < node.arguments().size(); i++)
+					{
+						ASTNode argNode = (ASTNode) node.arguments().get(i);
+						if ( argNode instanceof SimpleName )
+						{
+							String argKey = ((SimpleName) argNode).getIdentifier();
+							
+							if ( candTypes.containsKey(argKey))
+							{
+								System.out.println("Arg Key " + argKey);
+								HashSet<APIMethod> methods = new HashSet();
+								HashSet<APIType> matchedTypes = new HashSet();
+								HashSet<APIType> argTypes = candTypes.get(argKey);
+								if( candidateList != null)
+								{
+									for( APIType type: candidateList)
+									{
+										//method = node.getName().getIdentifier();
+										String tempMethod = type.getFQN() + "." + method;
+										System.out.println(tempMethod);
+										if (dictionary.getMethodByFullName(tempMethod) != null)
+											{ methods.add(dictionary.getMethodByFullName(tempMethod));}
+									}
+									
+									if(methods != null){
+									for( APIMethod aMethod: methods )
+									{
+										System.out.println("Here " + aMethod.getFQN());
+										APIType[] tempTypes = aMethod.getParameterTypes();
+										if(tempTypes[i] != null){
+										matchedTypes.add(aMethod.getParameterTypes()[i]);}
+									}
+									if(matchedTypes != null){
+									argTypes.retainAll(matchedTypes);
+									candTypes.put(argKey, argTypes);}
+									}
+								}
+							}
+						}
+					}
 				}
 			} 
 			else 
@@ -708,6 +751,7 @@ public class BakerVisitor extends ASTVisitor {
 		}
 		for (int i = 0; i < node.arguments().size(); i++)
 			((ASTNode) node.arguments().get(i)).accept(this);
+
 		return false;
 	}
 

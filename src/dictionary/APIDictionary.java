@@ -232,7 +232,6 @@ public class APIDictionary implements Serializable {
 	public APIType getTypeByFullName(String name)
 	{
 		String simpleName = name.substring(name.lastIndexOf('.')+1);
-		//String fullName = name.substring(0, name.lastIndexOf('.'));
 		HashSet<APIType> types = this.getTypesByName(simpleName);
 		if (types != null){
 		for(APIType type: types)
@@ -279,6 +278,30 @@ public class APIDictionary implements Serializable {
 		return null;
 	}
 	
+	/**
+	 * 
+	 * @param name fully quallified name of a method
+	 * @return APIMethod the  method
+	 */
+	public APIMethod getMethodByFullName(String name)
+	{
+		String methodName = name.substring(name.lastIndexOf('.')+1);
+		String fullName = name.substring(0, name.lastIndexOf('.'));
+		HashSet<APIMethod> methods = this.getMethodsByName(methodName);
+		if(methods == null)
+		{
+			return null;
+		}
+		else{
+		for(APIMethod method: methods)
+		{
+			if(method.getType().getFQN().equals(fullName))
+			{
+				return method;
+			}
+		}}
+		return null;
+	}
 	public HashSet<APIType> getTypesbyMethod(String name) {
 		HashSet<APIType> types = new HashSet<APIType>();
 		HashSet<APIMethod> methods = this.getMethodsByName(name);
@@ -305,8 +328,14 @@ public class APIDictionary implements Serializable {
 	public HashSet<APIMethod> getMethods(String className, String methodName) {
 		HashSet<APIMethod> methods = new HashSet<>();
 		HashSet<APIType> types = getTypesByName(className);
+		if(types != null)
+		{
 		for (APIType type : types)
-			methods.addAll(type.getMethods(methodName));
+			if (type.getMethods(methodName)!= null){
+			methods.addAll(type.getMethods(methodName));}
+			else return null;
 		return methods;
+		}
+		return null;
 	}
 }
