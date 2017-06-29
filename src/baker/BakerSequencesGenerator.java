@@ -45,8 +45,8 @@ public class BakerSequencesGenerator {
 	private String jarPath;
 	public BakerSequencesGenerator(String inPath) {
 		this.inPath = inPath;
-//		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
-		dictionary.build(new File("resources\\mockDictionary"));
+		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
+//		dictionary.build(new File("resources\\mockDictionary"));
 	}
 
 	public BakerSequencesGenerator(String inPath, String jarPath, boolean testing) {

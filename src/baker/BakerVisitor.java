@@ -726,15 +726,22 @@ public class BakerVisitor extends ASTVisitor {
 								{
 									for( APIMethod aMethod: methods )
 									{
-										if (testing) {System.out.println("Here " + aMethod.getFQN());}
+										if (false) {System.out.println("Here " + aMethod.getFQN());}
 										APIType[] tempTypes = aMethod.getParameterTypes();
 										if(tempTypes[i] != null){
 										matchedTypes.add(aMethod.getParameterTypes()[i]);}
 									}
 									if(matchedTypes != null)
 									{
-									argTypes.retainAll(matchedTypes);
-									candTypes.put(argKey, argTypes);
+										HashSet<APIType> temp = new HashSet();
+										for(APIType type: matchedTypes)
+										{
+											if (argTypes.contains(type))
+											{
+												temp.add(type);
+											}
+										}
+										if ( !temp.isEmpty() ) { candTypes.put(argKey, temp); }
 									}
 									
 								}
