@@ -20,7 +20,7 @@ public class BakerVisitor extends ASTVisitor {
 	private StringBuilder fullTokens = new StringBuilder(), partialTokens = new StringBuilder();
 	private String fullSequence = null, partialSequence = null;
 	private String[] fullSequenceTokens, partialSequenceTokens;
-	private boolean testing = true;
+	private boolean testing = false;
 
 	public BakerVisitor(String className, String superClassName, HashMap<String, HashSet<APIType>> candTypes, HashMap<String, String> trueTypes, APIDictionary dictionary) {
 		super(false);
@@ -321,7 +321,6 @@ public class BakerVisitor extends ASTVisitor {
 			//variable assigns to variable
 			if( right instanceof SimpleName)
 			{
-				System.out.println("blablabalbalabl");
 				rightKey =  ((SimpleName) right).getIdentifier().toString();
 				if ( candTypes.containsKey(rightKey) )
 				{
@@ -333,6 +332,7 @@ public class BakerVisitor extends ASTVisitor {
 						candTypes.put(leftKey, leftList);
 						candTypes.put(rightKey, rightList);
 						if(testing){
+							System.out.println("Deductive through variable assignment");
 							System.out.println("Key "+ leftKey + " and its candidate list: ");
 							for(APIType type: candTypes.get(leftKey))
 							{
@@ -346,7 +346,12 @@ public class BakerVisitor extends ASTVisitor {
 			//variable assigns to methodInvocation
 			if( right instanceof MethodInvocation)
 			{
-				rightKey = ((MethodInvocation) right).getName().toString();
+				if( ((MethodInvocation) right).getExpression() != null)
+				{
+				rightKey = ((MethodInvocation) right).getExpression().toString();
+				if  (candTypes.containsKey(rightKey))
+				{}
+				}
 			}
 			//variable assigns to fieldAccess
 			//variable assigns to 'new' keyword
@@ -620,7 +625,6 @@ public class BakerVisitor extends ASTVisitor {
 							for(APIType type: candTypes.get(subkey))
 							{
 								APIType returnType = null;
-								//android.webkit.WebView.getSettings + abc.getSettings
 								String fullMethodName = type.getFQN() + "."+tempNode.getName().getIdentifier() + "(" + tempNode.arguments().size() + ")";
 								returnType = dictionary.getReturnTypeByMethod(fullMethodName);
 								if(returnType != null){
@@ -667,6 +671,7 @@ public class BakerVisitor extends ASTVisitor {
 					{
 						if(candidateList == null)
 						{
+							//this make the shit broken.
 							candidateList = matchedType;
 						}
 						else
@@ -688,42 +693,50 @@ public class BakerVisitor extends ASTVisitor {
 						}}
 					
 					//Deductive Linking through argument
+					HashSet<APIMethod> methods = new HashSet();
+					if( candidateList != null)
+					{
+						for( APIType type: candidateList)
+						{
+							String tempMethod = type.getFQN() + "." + method;
+							if (false) {System.out.println("Temp Method: " + tempMethod);}
+							if (dictionary.getMethodByFullName(tempMethod) != null)
+								{ methods.add(dictionary.getMethodByFullName(tempMethod));}
+						}
+					}
 					for (int i = 0; i < node.arguments().size(); i++)
 					{
 						ASTNode argNode = (ASTNode) node.arguments().get(i);
 						if ( argNode instanceof SimpleName )
 						{
 							String argKey = ((SimpleName) argNode).getIdentifier();
-							
 							if ( candTypes.containsKey(argKey))
 							{
-								System.out.println("Arg Key " + argKey);
-								HashSet<APIMethod> methods = new HashSet();
+								if (testing){
+								System.out.println("Arg Key " + argKey+ " and its candidate list: ");
+									for(APIType type: candTypes.get(argKey))
+									{
+										System.out.print(type.toString() + ", ");
+									}
+									System.out.println();
+								}
 								HashSet<APIType> matchedTypes = new HashSet();
 								HashSet<APIType> argTypes = candTypes.get(argKey);
-								if( candidateList != null)
+								if( candidateList != null && methods != null)
 								{
-									for( APIType type: candidateList)
-									{
-										//method = node.getName().getIdentifier();
-										String tempMethod = type.getFQN() + "." + method;
-										System.out.println(tempMethod);
-										if (dictionary.getMethodByFullName(tempMethod) != null)
-											{ methods.add(dictionary.getMethodByFullName(tempMethod));}
-									}
-									
-									if(methods != null){
 									for( APIMethod aMethod: methods )
 									{
-										System.out.println("Here " + aMethod.getFQN());
+										if (testing) {System.out.println("Here " + aMethod.getFQN());}
 										APIType[] tempTypes = aMethod.getParameterTypes();
 										if(tempTypes[i] != null){
 										matchedTypes.add(aMethod.getParameterTypes()[i]);}
 									}
-									if(matchedTypes != null){
+									if(matchedTypes != null)
+									{
 									argTypes.retainAll(matchedTypes);
-									candTypes.put(argKey, argTypes);}
+									candTypes.put(argKey, argTypes);
 									}
+									
 								}
 							}
 						}

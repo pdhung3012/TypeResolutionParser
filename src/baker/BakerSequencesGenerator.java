@@ -45,8 +45,8 @@ public class BakerSequencesGenerator {
 	private String jarPath;
 	public BakerSequencesGenerator(String inPath) {
 		this.inPath = inPath;
-		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
-//		dictionary.build(new File("resources\\mockDictionary"));
+//		dictionary.build(new File("F:\\Study\\Research\\Re-implement LiveAPI\\data\\dictionary"));
+		dictionary.build(new File("resources\\mockDictionary"));
 	}
 
 	public BakerSequencesGenerator(String inPath, String jarPath, boolean testing) {
@@ -145,6 +145,17 @@ public class BakerSequencesGenerator {
 					numOfSequences += generateSequence(keepUnresolvables, lib, td, sourceFilePath, ast.getPackage().getName().getFullyQualifiedName(), "");
 				}
 			}
+			if(testing){
+			for (String key: candTypes.keySet())
+			{
+				System.out.println("Key "+ key + " and its candidate list: ");
+				for(APIType type2: candTypes.get(key))
+				{
+					if(type2 != null){
+						System.out.print(type2.toString() + ", ");}
+				}
+				System.out.println();
+			}}
 			for (String key : trueTypes.keySet())
 			{
 				String trueType = trueTypes.get(key);

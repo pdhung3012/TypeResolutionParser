@@ -17,6 +17,8 @@ org.junit.tests.anotherpackage.Super
 0.Widget
 1.Widget
 2.Widget
+0.LayoutPanel
+1.LayoutPanel
 bla.google.gwt.user.client.ui.RootLayoutPanel
 com.google.gwt.user.client.ui.RootLayoutPanel
 1.google.gwt.user.client.ui.RootLayoutPanel

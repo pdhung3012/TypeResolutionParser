@@ -20,8 +20,8 @@ MockClass.setJavaScriptEnabled (boolean,) void
 java.lang.String.getIndexOf (int,) 0.Char
 0.LayoutPanel.add (0.Widget,) void
 1.LayoutPanel.add (1.Widget,) void
-1.LayoutPanel.setWidgetLeftWidth (1.Widget, int, Unit, int, Unit,) void
-1.LayoutPanel.setWidgetRightWidth (1.Widget, int, Unit, int, Unit,) void
+1.LayoutPanel.setWidgetLeftWidth (1.Widget,int,Unit,int,Unit,) void
+1.LayoutPanel.setWidgetRightWidth (1.Widget,int,Unit,int,Unit,) void
 com.google.gwt.user.client.ui.RootLayoutPanel.get () com.google.gwt.user.client.ui.RootLayoutPanel
 bla.google.gwt.user.client.ui.RootLayoutPanel.get () bla.google.gwt.user.client.ui.RootLayoutPanel
 com.google.gwt.user.client.ui.RootLayoutPanel.add (1.LayoutPanel,) void
