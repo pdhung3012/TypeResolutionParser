@@ -14,7 +14,6 @@ public class BakerVisitor extends ASTVisitor {
 	public HashMap<String, HashSet<APIMethod>> candMethods;
 	public HashMap<String, HashSet<APIField>> candFields;
 	public HashMap<String, String> trueTypes;
-	private APIDictionary dictionary;
 	private String className, superClassName;
 	private int numOfExpressions = 0, numOfResolvedExpressions = 0;
 	private StringBuilder fullTokens = new StringBuilder(), partialTokens = new StringBuilder();
@@ -22,13 +21,12 @@ public class BakerVisitor extends ASTVisitor {
 	private String[] fullSequenceTokens, partialSequenceTokens;
 	private boolean testing = false;
 
-	public BakerVisitor(String className, String superClassName, HashMap<String, HashSet<APIType>> candTypes, HashMap<String, String> trueTypes, APIDictionary dictionary) {
+	public BakerVisitor(String className, String superClassName, HashMap<String, HashSet<APIType>> candTypes, HashMap<String, String> trueTypes) {
 		super(false);
 		this.className = className;
 		this.superClassName = superClassName;
 		this.candTypes = candTypes;
 		this.trueTypes = trueTypes;
-		this.dictionary = dictionary;
 	}
 
 	public HashMap<String, HashSet<APIType>> getTypes ()
@@ -346,11 +344,34 @@ public class BakerVisitor extends ASTVisitor {
 			//variable assigns to methodInvocation
 			if( right instanceof MethodInvocation)
 			{
+				HashSet<APIType> rightList = new HashSet();
+				HashSet<APIType> matchedTypes = new HashSet();
 				if( ((MethodInvocation) right).getExpression() != null)
 				{
-				rightKey = ((MethodInvocation) right).getExpression().toString();
-				if  (candTypes.containsKey(rightKey))
-				{}
+					if (((MethodInvocation) right).getExpression() instanceof SimpleName)
+					{
+						String method = ((MethodInvocation) right).getName().getIdentifier() + "(" + ((MethodInvocation) right).arguments().size() + ")";
+						rightKey = ((MethodInvocation) right).getExpression().toString();
+						if  (candTypes.get(rightKey) != null)
+						{
+							rightList = candTypes.get(rightKey);
+							if(rightList.size() <= 1000){
+								for( APIType type: rightList)
+								{
+									String tempMethod = type.getFQN() + "." + method;
+									if (false) {System.out.println("Temp Method: " + tempMethod);}
+									if (BakerSequencesGenerator.dictionary.getMethodByFullName(tempMethod) != null)
+									{ 
+										matchedTypes.add(BakerSequencesGenerator.dictionary.getReturnTypeByMethod(tempMethod));
+									}
+								}}
+							if (matchedTypes != null && leftList != null)
+							{
+								leftList.retainAll(matchedTypes);
+								candTypes.put(leftKey, leftList);
+							}
+						}
+					}
 				}
 			}
 			//variable assigns to fieldAccess
@@ -616,7 +637,7 @@ public class BakerVisitor extends ASTVisitor {
 						String subkey =  tempNode.getExpression().toString();	
 						//Parent method
 						String tempMethod = node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
-						HashSet<APIType> receiver = dictionary.getTypesbyMethod(tempMethod);
+						HashSet<APIType> receiver = BakerSequencesGenerator.dictionary.getTypesbyMethod(tempMethod);
 						//Receiver must match return type of parent method
 						if (candTypes.containsKey(subkey) && receiver != null)
 						{
@@ -626,7 +647,7 @@ public class BakerVisitor extends ASTVisitor {
 							{
 								APIType returnType = null;
 								String fullMethodName = type.getFQN() + "."+tempNode.getName().getIdentifier() + "(" + tempNode.arguments().size() + ")";
-								returnType = dictionary.getReturnTypeByMethod(fullMethodName);
+								returnType = BakerSequencesGenerator.dictionary.getReturnTypeByMethod(fullMethodName);
 								if(returnType != null){
 								if(receiver.contains(returnType))
 								{
@@ -643,7 +664,7 @@ public class BakerVisitor extends ASTVisitor {
 				{
 					if (!candTypes.containsKey(key))
 					{
-						HashSet<APIType> candidateList = dictionary.getTypesByName(key);
+						HashSet<APIType> candidateList = BakerSequencesGenerator.dictionary.getTypesByName(key);
 						candTypes.put(key, candidateList);
 						if (!trueTypes.containsKey(key))
 						{
@@ -659,19 +680,18 @@ public class BakerVisitor extends ASTVisitor {
 								if(testing){
 									System.out.println("Cant resolve " + key);}
 							}
-
 						}
 					}
 					HashSet<APIType> candidateList = candTypes.get(key);
 					String method = node.getName().getIdentifier() + "(" + node.arguments().size() + ")";
 					if(testing){System.out.println("Method: " + method);}
-					HashSet<APIType> matchedType = dictionary.getTypesbyMethod(method);
+					HashSet<APIType> matchedType = BakerSequencesGenerator.dictionary.getTypesbyMethod(method);
 
 					if(matchedType != null)
 					{
 						if(candidateList == null)
 						{
-							//this make the shit broken.
+							//need to fix
 							candidateList = matchedType;
 						}
 						else
@@ -692,17 +712,20 @@ public class BakerVisitor extends ASTVisitor {
 							System.out.println();
 						}}
 					
-					//Deductive Linking through argument
+					///Deductive Linking through argument
 					HashSet<APIMethod> methods = new HashSet();
 					if( candidateList != null)
 					{
+						if(candidateList.size() <= 1000 && (!candidateList.isEmpty())){
 						for( APIType type: candidateList)
 						{
 							String tempMethod = type.getFQN() + "." + method;
 							if (false) {System.out.println("Temp Method: " + tempMethod);}
-							if (dictionary.getMethodByFullName(tempMethod) != null)
-								{ methods.add(dictionary.getMethodByFullName(tempMethod));}
-						}
+							if (BakerSequencesGenerator.dictionary.getMethodByFullName(tempMethod) != null)
+							{ 
+								methods.add(BakerSequencesGenerator.dictionary.getMethodByFullName(tempMethod));
+							}
+						}}
 					}
 					for (int i = 0; i < node.arguments().size(); i++)
 					{
@@ -724,9 +747,10 @@ public class BakerVisitor extends ASTVisitor {
 								HashSet<APIType> argTypes = candTypes.get(argKey);
 								if( candidateList != null && methods != null)
 								{
+									if( methods.size() <= 1000){
 									for( APIMethod aMethod: methods )
 									{
-										if (false) {System.out.println("Here " + aMethod.getFQN());}
+										if (false) {System.out.println("Here: " + aMethod);}
 										APIType[] tempTypes = aMethod.getParameterTypes();
 										if(tempTypes[i] != null){
 										matchedTypes.add(aMethod.getParameterTypes()[i]);}
@@ -743,11 +767,12 @@ public class BakerVisitor extends ASTVisitor {
 										}
 										if ( !temp.isEmpty() ) { candTypes.put(argKey, temp); }
 									}
-									
+									}
 								}
 							}
 						}
 					}
+					
 				}
 			} 
 			else 
@@ -1113,7 +1138,7 @@ public class BakerVisitor extends ASTVisitor {
 		String key = node.getName().toString();
 		if(!candTypes.containsKey(key))
 		{
-			HashSet<APIType> candList = dictionary.getTypesByName(type.toString());
+			HashSet<APIType> candList = BakerSequencesGenerator.dictionary.getTypesByName(type.toString());
 			if(candList != null)
 			{
 				candTypes.put(key, candList);
@@ -1123,7 +1148,7 @@ public class BakerVisitor extends ASTVisitor {
 				if(type.toString().contains("."))
 				{
 					candList = new HashSet<APIType>();
-					candList.add(dictionary.getTypeByFullName(type.toString()));
+					candList.add(BakerSequencesGenerator.dictionary.getTypeByFullName(type.toString()));
 					candTypes.put(key, candList);
 				}
 				else

@@ -33,7 +33,7 @@ public class BakerSequencesGenerator {
 	public HashMap<String, HashSet<APIMethod>> candMethods = new HashMap<String, HashSet<APIMethod>>();
 	public HashMap<String, HashSet<APIField>> candFields = new HashMap<String, HashSet<APIField>>();
 	private static final boolean PARSE_INDIVIDUAL_SRC = false, SCAN_FILES_FRIST = false;
-	public APIDictionary dictionary = new APIDictionary();
+	public static APIDictionary dictionary = new APIDictionary();
 	private String inPath, outPath;
 	private boolean testing = false;
 	private PrintStream stLocations, stSourceSequences, stTargetSequences, stLog;
@@ -149,12 +149,15 @@ public class BakerSequencesGenerator {
 			for (String key: candTypes.keySet())
 			{
 				System.out.println("Key "+ key + " and its candidate list: ");
+				if(candTypes.get(key) != null)
+				{
 				for(APIType type2: candTypes.get(key))
 				{
 					if(type2 != null){
 						System.out.print(type2.toString() + ", ");}
 				}
 				System.out.println();
+				}
 			}}
 			for (String key : trueTypes.keySet())
 			{
@@ -279,7 +282,7 @@ public class BakerSequencesGenerator {
 			superClassName = BakerVisitor.getUnresolvedType(td.getSuperclassType());
 		for (MethodDeclaration method : td.getMethods()) {
 			stLog.println(path + "\t" + name + "\t" + method.getName().getIdentifier() + "\t" + getParameters(method));
-			BakerVisitor sg = new BakerVisitor(className, superClassName, candTypes, trueTypes, dictionary);
+			BakerVisitor sg = new BakerVisitor(className, superClassName, candTypes, trueTypes);
 			method.accept(sg);
 			
 			

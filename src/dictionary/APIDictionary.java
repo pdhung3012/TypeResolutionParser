@@ -255,7 +255,7 @@ public class APIDictionary implements Serializable {
 	}
 	
 	/**
-	 * @param name: fully qualified name of method
+	 * @param name fully qualified name of method
 	 * @return only single type
 	 */
 	public APIType getReturnTypeByMethod(String name)
@@ -285,6 +285,7 @@ public class APIDictionary implements Serializable {
 	 */
 	public APIMethod getMethodByFullName(String name)
 	{
+
 		String methodName = name.substring(name.lastIndexOf('.')+1);
 		String fullName = name.substring(0, name.lastIndexOf('.'));
 		HashSet<APIMethod> methods = this.getMethodsByName(methodName);
