@@ -53,4 +53,11 @@ public class APIMethod extends APIElement implements Serializable {
 	public int hashCode() {
 		return getFQN().hashCode();
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof APIMethod)
+			return getFQN().equals(((APIMethod) obj).getFQN());
+		return false;
+	}
 }

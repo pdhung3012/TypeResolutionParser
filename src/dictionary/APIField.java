@@ -35,4 +35,11 @@ public class APIField extends APIElement implements Serializable {
 	public int hashCode() {
 		return getFQN().hashCode();
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof APIField)
+			return getFQN().equals(((APIField) obj).getFQN());
+		return false;
+	}
 }
