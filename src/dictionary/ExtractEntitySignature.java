@@ -53,7 +53,7 @@ public class ExtractEntitySignature {
 	private final HashSet<String> types = new HashSet<>(), methods = new HashSet<>(), fields = new HashSet<>();
 
 	public static void main(String[] args) {
-		extractFromJars();
+		extractFromJars(new String[]{"D:/Projects/TypeResolution_Oracle/lib"});
 		extractFromSource();
 		
 		System.out.println("Jars: " + numOfJars);
@@ -63,13 +63,13 @@ public class ExtractEntitySignature {
 		System.out.println("Fields: " + numOfFields);
 	}
 
-	public static void extractFromJars() {
+	public static void extractFromJars(String[] dirs) {
+		for (String dir : dirs) {
+			extractFromJar(new File(dir));
+		}
 		String jrePath = System.getProperty("java.home") + "/lib";
 		File dir = new File(jrePath);
 		extractFromJar(dir);
-		
-//		dir = new File("D:/eclipse/plugins");
-//		extract(dir);
 	}
 
 	private static void extractFromJar(final File file) {
