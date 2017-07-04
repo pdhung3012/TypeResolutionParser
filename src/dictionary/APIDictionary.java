@@ -9,6 +9,7 @@ import java.util.List;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.set.TIntSet;
 import utils.FileUtil;
 
 public class APIDictionary implements Serializable {
@@ -281,27 +282,47 @@ public class APIDictionary implements Serializable {
 	/**
 	 * 
 	 * @param name fully quallified name of a method
-	 * @return APIMethod the  method
+	 * @return APIMethod the method
 	 */
 	public APIMethod getMethodByFullName(String name)
 	{
-
 		String methodName = name.substring(name.lastIndexOf('.')+1);
 		String fullName = name.substring(0, name.lastIndexOf('.'));
-		HashSet<APIMethod> methods = this.getMethodsByName(methodName);
-		if(methods == null)
+		APIType theType = this.getTypeByFullName(fullName);
+		if( theType == null)
 		{
 			return null;
 		}
-		else{
-		for(APIMethod method: methods)
+		else
 		{
-			if(method.getType().getFQN().equals(fullName))
+			if (theType.getMethods(methodName) != null)
 			{
-				return method;
+				for(APIMethod method: theType.getMethods(methodName))
+				{
+					if( method.getName().equals(methodName))
+					{
+						return method;
+					}
+				}
 			}
-		}}
+		}
 		return null;
+//		HashSet<APIMethod> methods = this.getMethodsByName(methodName);
+//		if(methods == null)
+//		{
+//			return null;
+//		}
+//		else
+//		{
+//			for(APIMethod method: methods)
+//			{
+//				if(method.getType().getFQN().equals(fullName))
+//				{
+//					return method;
+//				}
+//			}
+//		}
+//		return null;
 	}
 	public HashSet<APIType> getTypesbyMethod(String name) {
 		HashSet<APIType> types = new HashSet<APIType>();

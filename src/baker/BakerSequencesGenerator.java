@@ -56,7 +56,7 @@ public class BakerSequencesGenerator {
 	}
 
 	public int  generateSequences(String outPath) {
-		return generateSequences(true, null, outPath);
+		return generateSequences(true, "android", outPath);
 	}
 
 	public int generateSequences(final boolean keepUnresolvables, final String lib, final String outPath) {
@@ -162,6 +162,10 @@ public class BakerSequencesGenerator {
 			for (String key : trueTypes.keySet())
 			{
 				String trueType = trueTypes.get(key);
+				if (!trueType.contains(lib))
+				{
+					continue;
+				}
 				if (!trueType.isEmpty())
 				{
 					if ( candTypes.get(key) != null)

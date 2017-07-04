@@ -25,9 +25,9 @@ public class TestSequenceGenerator {
 
 	void test() {
 //		BakerSequencesGenerator psg = new BakerSequencesGenerator("resources/testInput", "", true);
-//		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\01-Android\\src\\androidExamples\\","F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\01-Android\\lib\\", true);
+		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\01-Android\\src\\androidExamples\\","F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\01-Android\\lib\\", true);
 //		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\02-GWT\\src\\gwt\\","F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\02-GWT\\lib\\", true);
-		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\03-Hibernate\\src\\hibernate\\","F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\03-Hibernate\\lib\\", true);
+//		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\03-Hibernate\\src\\hibernate\\","F:/Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\03-Hibernate\\lib\\", true);
 //		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\04-Jodatime\\src\\jodatime","F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\04-Jodatime\\lib\\", true);
 //		BakerSequencesGenerator psg = new BakerSequencesGenerator("F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\05-Xstream\\src\\xstream\\","F:\\Study\\Research\\Re-implement LiveAPI\\TypeResolution_Oracle\\05-Xstream\\lib\\", true);
 		psg.generateSequences("F:/Study/Research/Re-implement LiveAPI/sequences");
