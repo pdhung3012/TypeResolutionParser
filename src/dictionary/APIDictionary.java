@@ -228,20 +228,22 @@ public class APIDictionary implements Serializable {
 	/**
 	 * 
 	 * @param name the fully qualified name of a type
-	 * @return only single type
+	 * @return only a single type
 	 */
 	public APIType getTypeByFullName(String name)
 	{
 		String simpleName = name.substring(name.lastIndexOf('.')+1);
 		HashSet<APIType> types = this.getTypesByName(simpleName);
-		if (types != null){
-		for(APIType type: types)
+		if (types != null)
 		{
-			if(type.getFQN().equals(name))
+			for(APIType type: types)
 			{
-				return type;
+				if(type.getFQN().equals(name))
+				{
+					return type;
+				}
 			}
-		}}
+		}
 		return null;
 	}
 	

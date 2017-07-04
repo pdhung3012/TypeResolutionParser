@@ -56,7 +56,7 @@ public class BakerSequencesGenerator {
 	}
 
 	public int  generateSequences(String outPath) {
-		return generateSequences(true, "android", outPath);
+		return generateSequences(true, "gwt", outPath);
 	}
 
 	public int generateSequences(final boolean keepUnresolvables, final String lib, final String outPath) {
