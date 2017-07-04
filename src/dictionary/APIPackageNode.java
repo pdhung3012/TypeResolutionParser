@@ -48,4 +48,16 @@ public class APIPackageNode extends APIElement implements Serializable {
 	public String toString() {
 		return getFQN();
 	}
+
+	@Override
+	public int hashCode() {
+		return getFQN().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof APIPackageNode)
+			return getFQN().equals(((APIPackageNode) obj).getFQN());
+		return false;
+	}
 }

@@ -67,4 +67,16 @@ public class APIType extends APIElement implements Serializable {
 	public String toString() {
 		return getFQN();
 	}
+
+	@Override
+	public int hashCode() {
+		return getFQN().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof APIType)
+			return getFQN().equals(((APIType) obj).getFQN());
+		return false;
+	}
 }
