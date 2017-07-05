@@ -16,7 +16,7 @@ public class APIDictionary implements Serializable {
 	private static final long serialVersionUID = -8764767855443226874L;
 	
 	static final TObjectIntHashMap<String> nameIndex = new TObjectIntHashMap<>();
-	static final TIntObjectHashMap<byte[]> indexName = new TIntObjectHashMap<>();
+	static final TIntObjectHashMap<String> indexName = new TIntObjectHashMap<>();
 	
 	APIPackageNode root = new APIPackageNode(getId(""), null);
 	TIntObjectHashMap<HashSet<APIType>> nameTypes = new TIntObjectHashMap<>();
@@ -41,14 +41,14 @@ public class APIDictionary implements Serializable {
 		if (!nameIndex.containsKey(name)) {
 			id = nameIndex.size();
 			nameIndex.put(name, id);
-			indexName.put(id, name.getBytes());
+			indexName.put(id, name);
 		} else
 			id = nameIndex.get(name);
 		return id;
 	}
 
 	static String getName(int id) {
-		return new String(indexName.get(id));
+		return indexName.get(id);
 	}
 
 	public void build(File dir) {
